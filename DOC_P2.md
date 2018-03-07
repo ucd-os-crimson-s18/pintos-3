@@ -5,7 +5,11 @@
 # GROUP
 
 Eric Holguin Eric.Holguin@ucdenver.edu
+
+
 Nikki Yesalusky Nikki.Yesalusky@ucdenver.edu
+
+
 Jeff McMillan Jeff.McMillan@ucdenver.edu
 
 # PRELIMINARIES 
