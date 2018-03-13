@@ -29,21 +29,40 @@ tid_t
 process_execute (const char *file_name) 
 {
   char *fn_copy;
+  char *fn_tkn_copy; // copy of file name for tokenizing
   tid_t tid;
+  char *save_ptr; 
+    
 
   /* Make a copy of FILE_NAME.
      Otherwise there's a race between the caller and load(). */
   fn_copy = palloc_get_page (0);
   if (fn_copy == NULL)
     return TID_ERROR;
+  
   strlcpy (fn_copy, file_name, PGSIZE);
+  strlcpy (fn_tkn_copy, file_name, PGSIZE);
 
+  /* pull the file name only out of string with arguments */
+  char *real_file_name = strtok_r (fn_tkn_copy, " ", &save_ptr);
+
+
+  struct file * file = filesys_open (real_file_name);
+
+  if(file == NULL){
+    palloc_free_page (fn_tkn_copy);
+    palloc_free_page (fn_copy);
+    return TID_ERROR;
+  }
+  
   /* Create a new thread to execute FILE_NAME. */
-  tid = thread_create (file_name, PRI_DEFAULT, start_process, fn_copy);
+  tid = thread_create (real_file_name, PRI_DEFAULT, start_process, fn_copy);
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy); 
   return tid;
 }
+
+
 
 /* A thread function that loads a user process and starts it
    running. */
