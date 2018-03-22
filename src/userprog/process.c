@@ -38,8 +38,14 @@ process_execute (const char *file_name)
     return TID_ERROR;
   strlcpy (fn_copy, file_name, PGSIZE);
 
-  /* Create a new thread to execute FILE_NAME. */
-  tid = thread_create (file_name, PRI_DEFAULT, start_process, fn_copy);
+  /*------------------------------------------------------------ADDED BY CRIMSON*/  
+  char *save_ptr; /* Used to keep track of tokenizer's position */
+  /* Extract the name of the executable */
+  char *exe_name= strtok_r(fn_copy, " ", &save_ptr);
+  /*------------------------------------------------------------ADDED BY CRIMSON*/ 
+
+  /* Pass executable name into thread create instead of raw file name */
+  tid = thread_create (exe_name, PRI_DEFAULT, start_process, fn_copy);
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy); 
   return tid;
@@ -86,9 +92,14 @@ start_process (void *file_name_)
    This function will be implemented in problem 2-2.  For now, it
    does nothing. */
 int
-process_wait (tid_t child_tid UNUSED) 
+process_wait (tid_t child_tid) 
 {
-  return -1;
+  //return -1;
+  // Temporary fix to process wait
+  while(true)
+  {
+    thread_yield();
+  }
 }
 
 /* Free the current process's resources. */
@@ -195,7 +206,8 @@ struct Elf32_Phdr
 #define PF_W 2          /* Writable. */
 #define PF_R 4          /* Readable. */
 
-static bool setup_stack (void **esp);
+/* setup_stack now also takes a const char * for file name */
+static bool setup_stack (void **esp, const char *);
 static bool validate_segment (const struct Elf32_Phdr *, struct file *);
 static bool load_segment (struct file *file, off_t ofs, uint8_t *upage,
                           uint32_t read_bytes, uint32_t zero_bytes,
@@ -221,11 +233,17 @@ load (const char *file_name, void (**eip) (void), void **esp)
     goto done;
   process_activate ();
 
+  /*------------------------------------------------------------ADDED BY CRIMSON*/  
+  char *save_ptr; /* Used to keep track of tokenizer's position */
+  /* Extract the name of the executable */
+  char *exe_name = strtok_r(file_name, " ", &save_ptr);
+  /*------------------------------------------------------------ADDED BY CRIMSON*/  
+
   /* Open executable file. */
-  file = filesys_open (file_name);
+  file = filesys_open (exe_name); /* Changed file name */
   if (file == NULL) 
     {
-      printf ("load: %s: open failed\n", file_name);
+      printf ("load: %s: open failed\n", exe_name);/* Changed file name */
       goto done; 
     }
 
@@ -238,7 +256,8 @@ load (const char *file_name, void (**eip) (void), void **esp)
       || ehdr.e_phentsize != sizeof (struct Elf32_Phdr)
       || ehdr.e_phnum > 1024) 
     {
-      printf ("load: %s: error loading executable\n", file_name);
+      /* Changed file name */
+      printf ("load: %s: error loading executable\n", exe_name);
       goto done; 
     }
 
@@ -302,7 +321,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
     }
 
   /* Set up stack. */
-  if (!setup_stack (esp))
+  if (!setup_stack (esp, file_name))
     goto done;
 
   /* Start address. */
@@ -427,7 +446,7 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
 /* Create a minimal stack by mapping a zeroed page at the top of
    user virtual memory. */
 static bool
-setup_stack (void **esp) 
+setup_stack (void **esp, const char *file_name) 
 {
   uint8_t *kpage;
   bool success = false;
@@ -437,7 +456,64 @@ setup_stack (void **esp)
     {
       success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage, true);
       if (success)
+      {
         *esp = PHYS_BASE;
+
+        /*------------------------------------------------------------ADDED BY CRIMSON*/
+        /* Declare token and save ptr, to keep track of token's position*/
+        char *token, *save_ptr;
+        uint8_t char_count; /* count of chars */
+        uint8_t count = 0; /* count of strings */
+        int address[128]; /* variable to store esp address */
+
+        /* Parse file name, delimited by spaces */
+        for(token = strtok_r (file_name, " ", &save_ptr); token != NULL; 
+            token = strtok_r (NULL, " ", &save_ptr))
+            {
+              /* Add null terminator */
+              token[strlen(token) + 1] = '\0';
+              /* Add to char count */
+              char_count += strlen(token);
+              /* Decrement stack pointer */
+              *esp -= strlen(token);
+              /* Store into stack */
+              memcpy(*esp, token, strlen(token));
+
+              address[count] = *esp;
+
+              count++;
+            }
+
+        /* Align stack to 4 bytes */
+        uint8_t word_align = 4 - (char_count % 4);
+        *esp -= word_align;
+        memset(*esp, 0, word_align);
+        /* Last argument */
+        *esp -= 4;
+        memset(*esp, 0, 4);  
+
+        char val = '\0';
+
+        for(int i = count; i > 0; i--)
+        {
+          *esp -= 4;
+          memcpy(*esp, address[i], sizeof(address));
+        }
+
+        // address of arg[v]
+        *esp -= 4;
+        memcpy(*esp, address[0], sizeof(address));
+
+        // argc
+        *esp -= 4;
+        memset(*esp, count, sizeof(count));
+
+        // return address
+        *esp -= 4;
+        memset(*esp, 0, 4);
+
+      /*------------------------------------------------------------ADDED BY CRIMSON*/  
+      } 
       else
         palloc_free_page (kpage);
     }
