@@ -1,7 +1,7 @@
 #ifndef USERPROG_SYSCALL_H
 #define USERPROG_SYSCALL_H
 
-#include "threads/thread.h"
+#include "userprog/process.h"
 
 void syscall_init (void);
 

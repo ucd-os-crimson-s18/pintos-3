@@ -462,6 +462,7 @@ setup_stack (void **esp, const char *file_name)
         /*------------------------------------------------------------ADDED BY CRIMSON*/
         /* Declare token and save ptr, to keep track of token's position*/
         char *token, *save_ptr;
+        
         uint8_t char_count; /* count of chars */
         uint8_t count = 0; /* count of strings */
         int address[128]; /* variable to store esp address */
