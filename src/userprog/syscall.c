@@ -4,6 +4,7 @@
 #include "threads/interrupt.h"
 #include "threads/thread.h"
 
+
 static void syscall_handler (struct intr_frame *);
 
 void
@@ -18,7 +19,7 @@ syscall_handler (struct intr_frame *f UNUSED)
   // Check if f->esp is a valid pointer
   if (f->esp )
   {
-    exit(-1)
+    syscall_exit(-1);
   }
 
   switch(*(int*)f->esp)

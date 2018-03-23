@@ -31,7 +31,7 @@ process_execute (const char *file_name)
   char *fn_copy;
   char *fn_tkn_copy; // copy of file name for tokenizing
   tid_t tid;
-  char *save_ptr; 
+  char *save_ptr; /* Used to keep track of tokenizer's position */
     
 
   /* Make a copy of FILE_NAME.
@@ -50,7 +50,6 @@ process_execute (const char *file_name)
   struct file * file = filesys_open (real_file_name);
 
   /*------------------------------------------------------------ADDED BY CRIMSON*/  
-  char *save_ptr; /* Used to keep track of tokenizer's position */
   /* Extract the name of the executable */
   char *exe_name= strtok_r(fn_copy, " ", &save_ptr);
   /*------------------------------------------------------------ADDED BY CRIMSON*/ 
