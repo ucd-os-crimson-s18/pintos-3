@@ -1,5 +1,6 @@
 #include "userprog/syscall.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <syscall-nr.h>
 #include "threads/interrupt.h"
 #include "threads/thread.h"
@@ -16,9 +17,9 @@ static void
 syscall_handler (struct intr_frame *f UNUSED) 
 {
   // Check if f->esp is a valid pointer
-  if (f->esp )
+  if (f->esp)
   {
-    exit(-1)
+    syscall_exit(-1);
   }
 
   switch(*(int*)f->esp)
@@ -126,7 +127,7 @@ syscall_handler (struct intr_frame *f UNUSED)
       /* Get the first argument, cast to int */
       int fd = *((int*)f->esp + 1);
 
-      /* Run the syscall function, store return into eax */
+      /* Run the syscall function, store return into esyscall_ax */
       f->eax = syscall_tell (fd);
     }
     case SYS_CLOSE: /* Close a file. */

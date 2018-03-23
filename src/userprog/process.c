@@ -31,7 +31,9 @@ process_execute (const char *file_name)
   char *fn_copy;
   char *fn_tkn_copy; // copy of file name for tokenizing
   tid_t tid;
-  char *save_ptr; 
+  /*------------------------------------------------------------ADDED BY CRIMSON*/  
+  char *save_ptr; /* Used to keep track of tokenizer's position */
+  /*------------------------------------------------------------ADDED BY CRIMSON*/ 
     
 
   /* Make a copy of FILE_NAME.
@@ -50,7 +52,6 @@ process_execute (const char *file_name)
   struct file * file = filesys_open (real_file_name);
 
   /*------------------------------------------------------------ADDED BY CRIMSON*/  
-  char *save_ptr; /* Used to keep track of tokenizer's position */
   /* Extract the name of the executable */
   char *exe_name= strtok_r(fn_copy, " ", &save_ptr);
   /*------------------------------------------------------------ADDED BY CRIMSON*/ 
@@ -475,10 +476,9 @@ setup_stack (void **esp, const char *file_name)
         /*------------------------------------------------------------ADDED BY CRIMSON*/
         /* Declare token and save ptr, to keep track of token's position*/
         char *token, *save_ptr;
-        
         uint8_t char_count; /* count of chars */
-        uint8_t count = 0; /* count of strings */
-        int address[128]; /* variable to store esp address */
+        uint8_t argc = 0; /* count of arguments */
+        char * argv[128]; /* variable to store argument address */
 
         /* Parse file name, delimited by spaces */
         for(token = strtok_r (file_name, " ", &save_ptr); token != NULL; 
@@ -490,41 +490,38 @@ setup_stack (void **esp, const char *file_name)
               char_count += strlen(token);
               /* Decrement stack pointer */
               *esp -= strlen(token);
+              /* Store temporary argument */
+              argv[argc] = *esp;
               /* Store into stack */
               memcpy(*esp, token, strlen(token));
-
-              address[count] = *esp;
-
-              count++;
+              /*Increment argument count */
+              argc++;
             }
 
         /* Align stack to 4 bytes */
         uint8_t word_align = 4 - (char_count % 4);
         *esp -= word_align;
         memset(*esp, 0, word_align);
-        /* Last argument */
-        *esp -= 4;
-        memset(*esp, 0, 4);  
 
-        char val = '\0';
-
-        for(int i = count; i > 0; i--)
+        /* Push the addresses of the arguments */
+        for(int i = argc; i >= 0; i--)
         {
-          *esp -= 4;
-          memcpy(*esp, address[i], sizeof(address));
+          *esp -= sizeof(char *);
+          memcpy(*esp, &argv[i], sizeof(char *));
         }
 
-        // address of arg[v]
-        *esp -= 4;
-        memcpy(*esp, address[0], sizeof(address));
+        // argv
+        token = *esp;
+        *esp -= sizeof(char **);
+        memcpy(*esp, &token, sizeof(char **));
 
         // argc
-        *esp -= 4;
-        memset(*esp, count, sizeof(count));
+        *esp -= sizeof(int);
+        memset(*esp, argc, sizeof(int));
 
         // return address
-        *esp -= 4;
-        memset(*esp, 0, 4);
+        *esp -= sizeof(void *);
+        memset(*esp, 0, sizeof(void *));
 
       /*------------------------------------------------------------ADDED BY CRIMSON*/  
       } 
