@@ -2,8 +2,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <syscall-nr.h>
+#include <user/syscall.h>
 #include "threads/interrupt.h"
 #include "threads/thread.h"
+#include "devices/shutdown.h"
 
 static void syscall_handler (struct intr_frame *);
 
@@ -17,9 +19,10 @@ static void
 syscall_handler (struct intr_frame *f UNUSED) 
 {
   // Check if f->esp is a valid pointer
+  // Valid pointer if it is in user address space?
   if (f->esp)
   {
-    syscall_exit(-1);
+    exit(-1);
   }
 
   switch(*(int*)f->esp)
@@ -29,6 +32,8 @@ syscall_handler (struct intr_frame *f UNUSED)
     {
       /* Run the syscall function */
       syscall_halt ();
+
+      break;
     }                   
     case SYS_EXIT: /* Terminate this process. */                   
     {
@@ -37,6 +42,8 @@ syscall_handler (struct intr_frame *f UNUSED)
 
       /* Run the syscall function */
       syscall_exit (status);
+
+      break;
     } 
     case SYS_EXEC: /* Start another process. */
     {
@@ -45,6 +52,8 @@ syscall_handler (struct intr_frame *f UNUSED)
 
       /* Run the syscall function, store return into eax */
       f->eax = syscall_exec (cmd_line);
+
+      break;
     }
     case SYS_WAIT: /* Wait for a child process to die. */
     {
@@ -53,6 +62,8 @@ syscall_handler (struct intr_frame *f UNUSED)
 
       /* Run the syscall function, store return into eax */
       f->eax = syscall_wait (pid);
+
+      break;
     }
     case SYS_CREATE: /* Create a file. */
     {
@@ -63,6 +74,8 @@ syscall_handler (struct intr_frame *f UNUSED)
 
       /* Run the syscall function, store return into eax */
       f->eax = syscall_create (file, initial_size);
+
+      break;
     }
     case SYS_REMOVE: /* Delete a file. */
     {
@@ -71,6 +84,8 @@ syscall_handler (struct intr_frame *f UNUSED)
 
       /* Run the syscall function, store return into eax */
       f->eax = syscall_remove (file);
+
+      break;
     }
     case SYS_OPEN: /* Open a file. */
     {
@@ -79,6 +94,8 @@ syscall_handler (struct intr_frame *f UNUSED)
 
       /* Run the syscall function, store return into eax */
       f->eax = syscall_open (file);
+
+      break;
     }
     case SYS_FILESIZE: /* Obtain a file's size. */
     {
@@ -87,6 +104,8 @@ syscall_handler (struct intr_frame *f UNUSED)
 
       /* Run the syscall function, store return into eax */
       f->eax = syscall_filesize (fd);
+
+      break;
     }
     case SYS_READ: /* Read from a file. */
     {
@@ -99,6 +118,8 @@ syscall_handler (struct intr_frame *f UNUSED)
 
       /* Run the syscall function, store return into eax */
       f->eax = syscall_read(fd, buffer, size);
+
+      break;
     }
     case SYS_WRITE: /* Write to a file. */
     {
@@ -111,6 +132,8 @@ syscall_handler (struct intr_frame *f UNUSED)
 
       /* Run the syscall function, store return into eax */
       f->eax = syscall_write(fd, buffer, size);
+
+      break;
     }
     case SYS_SEEK: /* Change position in a file. */
     {
@@ -121,6 +144,8 @@ syscall_handler (struct intr_frame *f UNUSED)
 
       /* Run the syscall function */
       syscall_seek (fd, position);
+
+      break;
     }
     case SYS_TELL: /* Report current position in a file. */
     {
@@ -129,6 +154,8 @@ syscall_handler (struct intr_frame *f UNUSED)
 
       /* Run the syscall function, store return into esyscall_ax */
       f->eax = syscall_tell (fd);
+
+      break;
     }
     case SYS_CLOSE: /* Close a file. */
     {
@@ -137,6 +164,8 @@ syscall_handler (struct intr_frame *f UNUSED)
 
       /* Run the syscall function */
       syscall_close (fd);
+
+      break;
     }
   }
 }
@@ -148,7 +177,7 @@ some information about possible deadlock situations, etc.
 void 
 syscall_halt (void)
 {
-
+  shutdown_power_off();
 }
 
 /*
@@ -159,7 +188,7 @@ a status of 0 indicates success and nonzero values indicate errors.
 void 
 syscall_exit (int status)
 {
-
+  process_exit();
 }
 
 /*
@@ -290,7 +319,15 @@ readers and our grading scripts.
 int 
 syscall_write (int fd, void *buffer, unsigned size)
 {
+  if(fd == 1)
+  {
+    putbuf(buffer, size);
 
+    return size;
+  }
+
+  return 0;
+}
 }
 
 /*
