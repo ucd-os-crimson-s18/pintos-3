@@ -1,1 +1,3 @@
 src/userprog/pintos-p2*
+src/utils/squish*
+/src/utils/setitimer-helper.o
