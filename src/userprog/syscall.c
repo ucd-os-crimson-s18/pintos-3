@@ -23,7 +23,7 @@ syscall_handler (struct intr_frame *f UNUSED)
   // Valid pointer if it is in user address space?
   if (f->esp)
   {
-    exit(-1);
+    syscall_exit(-1);
   }
 
   switch(*(int*)f->esp)
@@ -329,7 +329,7 @@ syscall_write (int fd, void *buffer, unsigned size)
 
   return 0;
 }
-}
+
 
 /*
 Changes the next byte to be read or written in open file fd to position, expressed in

@@ -29,7 +29,6 @@ tid_t
 process_execute (const char *file_name) 
 {
   char *fn_copy;
-  char *fn_tkn_copy; // copy of file name for tokenizing
   tid_t tid;
   /*------------------------------------------------------------ADDED BY CRIMSON*/  
   char *save_ptr; /* Used to keep track of tokenizer's position */
@@ -43,13 +42,9 @@ process_execute (const char *file_name)
     return TID_ERROR;
   
   strlcpy (fn_copy, file_name, PGSIZE);
-  strlcpy (fn_tkn_copy, file_name, PGSIZE);
 
   /* pull the file name only out of string with arguments */
   char *real_file_name = strtok_r (fn_tkn_copy, " ", &save_ptr);
-
-
-  struct file * file = filesys_open (real_file_name);
 
   /*------------------------------------------------------------ADDED BY CRIMSON*/  
   /* Extract the name of the executable */
