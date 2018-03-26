@@ -43,9 +43,6 @@ process_execute (const char *file_name)
   
   strlcpy (fn_copy, file_name, PGSIZE);
 
-  /* pull the file name only out of string with arguments */
-  char *real_file_name = strtok_r (fn_tkn_copy, " ", &save_ptr);
-
   /*------------------------------------------------------------ADDED BY CRIMSON*/  
   /* Extract the name of the executable */
   char *exe_name= strtok_r(fn_copy, " ", &save_ptr);
