@@ -329,10 +329,6 @@ syscall_write (int fd, void *buffer, unsigned size)
 
   return 0;
 }
-<<<<<<< HEAD
-=======
-
->>>>>>> 3480bed7da00a8db2b3dc497562ded54ac083b89
 
 /*
 Changes the next byte to be read or written in open file fd to position, expressed in
