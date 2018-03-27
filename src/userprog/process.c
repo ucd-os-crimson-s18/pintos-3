@@ -29,31 +29,21 @@ tid_t
 process_execute (const char *file_name) 
 {
   char *fn_copy;
-  char *fn_tkn_copy; // copy of file name for tokenizing
   tid_t tid;
   /*------------------------------------------------------------ADDED BY CRIMSON*/  
   char *save_ptr; /* Used to keep track of tokenizer's position */
   /*------------------------------------------------------------ADDED BY CRIMSON*/ 
     
-
   /* Make a copy of FILE_NAME.
      Otherwise there's a race between the caller and load(). */
   fn_copy = palloc_get_page (0);
   if (fn_copy == NULL)
     return TID_ERROR;
-  
   strlcpy (fn_copy, file_name, PGSIZE);
-  strlcpy (fn_tkn_copy, file_name, PGSIZE);
-
-  /* pull the file name only out of string with arguments */
-  char *real_file_name = strtok_r (fn_tkn_copy, " ", &save_ptr);
-
-
-  struct file * file = filesys_open (real_file_name);
 
   /*------------------------------------------------------------ADDED BY CRIMSON*/  
   /* Extract the name of the executable */
-  char *exe_name= strtok_r(fn_copy, " ", &save_ptr);
+  char *exe_name = strtok_r(fn_copy, " ", &save_ptr);
   /*------------------------------------------------------------ADDED BY CRIMSON*/ 
 
   /* Pass executable name into thread create instead of raw file name */
@@ -478,7 +468,7 @@ setup_stack (void **esp, const char *file_name)
         char *token, *save_ptr;
         uint8_t char_count; /* count of chars */
         uint8_t argc = 0; /* count of arguments */
-        char * argv[128]; /* variable to store argument address */
+        char * argv[128]; /* variable to store argument address*/
 
         /* Parse file name, delimited by spaces */
         for(token = strtok_r (file_name, " ", &save_ptr); token != NULL; 

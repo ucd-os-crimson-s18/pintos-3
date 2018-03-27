@@ -1,10 +1,10 @@
 #include "userprog/syscall.h"
 #include <stdio.h>
-#include <stdlib.h>
 #include <syscall-nr.h>
 #include <user/syscall.h>
 #include "threads/interrupt.h"
 #include "threads/thread.h"
+#include "threads/vaddr.h"
 #include "devices/shutdown.h"
 
 
@@ -17,11 +17,11 @@ syscall_init (void)
 }
 
 static void
-syscall_handler (struct intr_frame *f UNUSED) 
+syscall_handler (struct intr_frame *f) 
 {
   // Check if f->esp is a valid pointer
   // Valid pointer if it is in user address space?
-  if (f->esp)
+  if (!(validate_ptr(*(uint8_t*)f->esp)))
   {
     exit(-1);
   }
@@ -39,7 +39,7 @@ syscall_handler (struct intr_frame *f UNUSED)
     case SYS_EXIT: /* Terminate this process. */                   
     {
       /* Get the first argument, cast to int */
-      int status = *((int*)f->esp + 1);;
+      int status = *((int*)f->esp + 1);
 
       /* Run the syscall function */
       syscall_exit (status);
@@ -329,7 +329,6 @@ syscall_write (int fd, void *buffer, unsigned size)
 
   return 0;
 }
-}
 
 /*
 Changes the next byte to be read or written in open file fd to position, expressed in
@@ -364,4 +363,42 @@ void
 syscall_close (int fd)
 {
 
+}
+
+
+bool
+validate_ptr(const uint8_t *address)
+{
+  if(is_user_vaddr (address))
+  {
+    return 1;
+  }
+  else
+    return 0;
+
+}
+
+
+/* Reads a byte at user virtual address UADDR.
+UADDR must be below PHYS_BASE.
+Returns the byte value if successful, -1 if a segfault
+occurred. */
+static int
+get_user (const uint8_t *uaddr)
+{
+  int result;
+  asm ("movl $1f, %0; movzbl %1, %0; 1:"
+  : "=&a" (result) : "m" (*uaddr));
+  return result;
+}
+/* Writes BYTE to user address UDST.
+UDST must be below PHYS_BASE.
+Returns true if successful, false if a segfault occurred. */
+static bool
+put_user (uint8_t *udst, uint8_t byte)
+{
+  int error_code;
+  asm ("movl $1f, %0; movb %b2, %1; 1:"
+  : "=&a" (error_code), "=m" (*udst) : "q" (byte));
+  return error_code != -1;
 }

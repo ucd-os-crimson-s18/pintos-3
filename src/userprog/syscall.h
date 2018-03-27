@@ -19,4 +19,8 @@ void syscall_seek (int, unsigned);
 unsigned syscall_tell (int);
 void syscall_close (int);
 
+static int get_user (const uint8_t *);
+
+bool validate_ptr(const uint8_t *);
+
 #endif /* userprog/syscall.h */
