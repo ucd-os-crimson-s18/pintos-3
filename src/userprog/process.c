@@ -43,7 +43,7 @@ process_execute (const char *file_name)
 
   /*------------------------------------------------------------ADDED BY CRIMSON*/  
   /* Extract the name of the executable */
-  char *exe_name = strtok_r(fn_copy, " ", &save_ptr);
+  char *exe_name = strtok_r(file_name, " ", &save_ptr);
   /*------------------------------------------------------------ADDED BY CRIMSON*/ 
 
   /* Pass executable name into thread create instead of raw file name */
@@ -211,7 +211,7 @@ struct Elf32_Phdr
 #define PF_R 4          /* Readable. */
 
 /* setup_stack now also takes a const char * for file name */
-static bool setup_stack (void **esp, const char *);
+static bool setup_stack (void **esp, char *, char *);
 static bool validate_segment (const struct Elf32_Phdr *, struct file *);
 static bool load_segment (struct file *file, off_t ofs, uint8_t *upage,
                           uint32_t read_bytes, uint32_t zero_bytes,
@@ -238,7 +238,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
   process_activate ();
 
   /*------------------------------------------------------------ADDED BY CRIMSON*/  
-  char *save_ptr; /* Used to keep track of tokenizer's position */
+  char * save_ptr; /* Used to keep track of tokenizer's position */
   /* Extract the name of the executable */
   char *exe_name = strtok_r(file_name, " ", &save_ptr);
   /*------------------------------------------------------------ADDED BY CRIMSON*/  
@@ -325,7 +325,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
     }
 
   /* Set up stack. */
-  if (!setup_stack (esp, file_name))
+  if (!setup_stack (esp, exe_name, save_ptr))
     goto done;
 
   /* Start address. */
@@ -450,7 +450,7 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
 /* Create a minimal stack by mapping a zeroed page at the top of
    user virtual memory. */
 static bool
-setup_stack (void **esp, const char *file_name) 
+setup_stack (void **esp, char *file_name, char* save_ptr) 
 {
   uint8_t *kpage;
   bool success = false;
@@ -465,15 +465,22 @@ setup_stack (void **esp, const char *file_name)
 
         /*------------------------------------------------------------ADDED BY CRIMSON*/
         /* Declare token and save ptr, to keep track of token's position*/
-        char *token, *save_ptr;
+        char *token;
         uint8_t char_count; /* count of chars */
         uint8_t argc = 0; /* count of arguments */
         char * argv[128]; /* variable to store argument address*/
+        int val = 0;
 
-        /* Parse file name, delimited by spaces */
-        for(token = strtok_r (file_name, " ", &save_ptr); token != NULL; 
+        for(token = file_name; token != NULL; 
             token = strtok_r (NULL, " ", &save_ptr))
             {
+              printf ("%s\n", token);
+            }
+        /* Parse file name, delimited by spaces */
+        for(token = file_name; token != NULL; 
+            token = strtok_r (NULL, " ", &save_ptr))
+            {
+              printf ("%s\n", token);
               /* Add null terminator */
               token[strlen(token) + 1] = '\0';
               /* Add to char count */
@@ -497,8 +504,14 @@ setup_stack (void **esp, const char *file_name)
         for(int i = argc; i >= 0; i--)
         {
           *esp -= sizeof(char *);
-          memcpy(*esp, &argv[i], sizeof(char *));
+          memcpy(*esp, &argv[i - 1], sizeof(char *));
         }
+
+        uint32_t dw = (uint32_t)PHYS_BASE - (uint32_t) *esp;
+
+        printf("%p\t%p\t%d\n", PHYS_BASE, *esp, dw );
+
+        hex_dump((uintptr_t) *esp, *esp, dw, true);
 
         // argv
         token = *esp;
@@ -507,11 +520,11 @@ setup_stack (void **esp, const char *file_name)
 
         // argc
         *esp -= sizeof(int);
-        memset(*esp, argc, sizeof(int));
+        memcpy(*esp, argc, sizeof(int));
 
         // return address
         *esp -= sizeof(void *);
-        memset(*esp, 0, sizeof(void *));
+        memcpy(*esp, val, sizeof(void *));
 
       /*------------------------------------------------------------ADDED BY CRIMSON*/  
       } 
