@@ -472,29 +472,20 @@ setup_stack (void **esp, char *file_name, char* save_ptr)
         int val = 0;
 
         for(token = file_name; token != NULL; 
-            token = strtok_r (NULL, " ", &save_ptr))
+          token = strtok_r (NULL, " ", &save_ptr))
             {
               printf ("%s\n", token);
-            }
-        /* Parse file name, delimited by spaces */
-        for(token = file_name; token != NULL; 
-            token = strtok_r (NULL, " ", &save_ptr))
-            {
-              printf ("%s\n", token);
-              /* Add null terminator */
-              token[strlen(token) + 1] = '\0';
               /* Add to char count */
               char_count += strlen(token);
               /* Decrement stack pointer */
-              *esp -= strlen(token);
+              *esp -= strlen(token) + 1;
               /* Store temporary argument */
               argv[argc] = *esp;
               /* Store into stack */
-              memcpy(*esp, token, strlen(token));
+              memcpy(*esp, token, (strlen(token) + 1));
               /*Increment argument count */
               argc++;
             }
-
         /* Align stack to 4 bytes */
         uint8_t word_align = 4 - (char_count % 4);
         *esp -= word_align;
@@ -507,16 +498,16 @@ setup_stack (void **esp, char *file_name, char* save_ptr)
           memcpy(*esp, &argv[i - 1], sizeof(char *));
         }
 
+        // argv
+        argv[0] = *esp;
+        *esp -= sizeof(char **);
+        memcpy(*esp, &token, sizeof(char **));
+
         uint32_t dw = (uint32_t)PHYS_BASE - (uint32_t) *esp;
 
         printf("%p\t%p\t%d\n", PHYS_BASE, *esp, dw );
 
         hex_dump((uintptr_t) *esp, *esp, dw, true);
-
-        // argv
-        token = *esp;
-        *esp -= sizeof(char **);
-        memcpy(*esp, &token, sizeof(char **));
 
         // argc
         *esp -= sizeof(int);
@@ -525,6 +516,8 @@ setup_stack (void **esp, char *file_name, char* save_ptr)
         // return address
         *esp -= sizeof(void *);
         memcpy(*esp, val, sizeof(void *));
+
+
 
       /*------------------------------------------------------------ADDED BY CRIMSON*/  
       } 
