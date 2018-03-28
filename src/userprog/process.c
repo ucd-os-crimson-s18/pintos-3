@@ -479,11 +479,11 @@ setup_stack (void **esp, const char *file_name)
               /* Add to char count */
               char_count += strlen(token);
               /* Decrement stack pointer */
-              *esp -= strlen(token);
-              /* Store temporary argument */
-              argv[argc] = *esp;
+              *esp -= strlen(token) + 1;
               /* Store into stack */
-              memcpy(*esp, token, strlen(token));
+              memcpy(*esp, token, strlen(token) + 1);
+	       /* Store temporary argument */
+              argv[argc] = *esp;
               /*Increment argument count */
               argc++;
             }
