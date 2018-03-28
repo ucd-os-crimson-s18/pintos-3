@@ -467,7 +467,7 @@ setup_stack (void **esp, char *file_name, char* save_ptr)
         /* Declare token and save ptr, to keep track of token's position*/
         char *token;
         uint8_t char_count; /* count of chars */
-        uint8_t argc = 0; /* count of arguments */
+        int argc = 0; /* count of arguments */
         char * argv[128]; /* variable to store argument address*/
 
         for(token = file_name; token != NULL; token = strtok_r (NULL, " ", &save_ptr))
@@ -483,7 +483,6 @@ setup_stack (void **esp, char *file_name, char* save_ptr)
           /*Increment argument count */
           argc++;
         }
-
         /* Align stack to 4 bytes */
         uint8_t word_align = 4 - (char_count % 4);
         *esp -= word_align;

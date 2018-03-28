@@ -1,11 +1,14 @@
 #include "userprog/syscall.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <syscall-nr.h>
 #include <user/syscall.h>
+#include "userprog/process.h"
 #include "threads/interrupt.h"
 #include "threads/thread.h"
 #include "threads/vaddr.h"
 #include "devices/shutdown.h"
+
 
 
 static void syscall_handler (struct intr_frame *);
@@ -21,11 +24,10 @@ syscall_handler (struct intr_frame *f)
 {
   // Check if f->esp is a valid pointer
   // Valid pointer if it is in user address space?
-  if (!(validate_ptr(*(uint8_t*)f->esp)))
+  /*if (!(validate_ptr(*(uint8_t*)f->esp)))
   {
     syscall_exit(-1);
-  }
-
+  }*/
   switch(*(int*)f->esp)
   {
     /* Halt the operating system. */
@@ -40,9 +42,8 @@ syscall_handler (struct intr_frame *f)
     {
       /* Get the first argument, cast to int */
       int status = *((int*)f->esp + 1);
-
       /* Run the syscall function */
-      syscall_exit (status);
+      thread_exit ();
 
       break;
     } 
