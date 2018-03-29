@@ -467,64 +467,49 @@ setup_stack (void **esp, char *file_name, char* save_ptr)
         /* Declare token and save ptr, to keep track of token's position*/
         char *token;
         uint8_t char_count; /* count of chars */
-        uint8_t argc = 0; /* count of arguments */
+        int argc = 0; /* count of arguments */
         char * argv[128]; /* variable to store argument address*/
-        int val = 0;
 
-        for(token = file_name; token != NULL; 
-            token = strtok_r (NULL, " ", &save_ptr))
-            {
-              printf ("%s\n", token);
-            }
-        /* Parse file name, delimited by spaces */
-        for(token = file_name; token != NULL; 
-            token = strtok_r (NULL, " ", &save_ptr))
-            {
-              printf ("%s\n", token);
-              /* Add null terminator */
-              token[strlen(token) + 1] = '\0';
-              /* Add to char count */
-              char_count += strlen(token);
-              /* Decrement stack pointer */
-              *esp -= strlen(token) + 1;
-              /* Store into stack */
-              memcpy(*esp, token, strlen(token) + 1);
-	       /* Store temporary argument */
-              argv[argc] = *esp;
-              /*Increment argument count */
-              argc++;
-            }
-
+        for(token = file_name; token != NULL; token = strtok_r (NULL, " ", &save_ptr))
+        {
+          /* Add to char count */
+          char_count += (strlen(token) + 1);
+          /* Decrement stack pointer */
+          *esp -= strlen(token) + 1;
+          /* Store temporary argument */
+          argv[argc] = *esp;
+          /* Store into stack */
+          memcpy(*esp, token, (strlen(token) + 1));
+          /*Increment argument count */
+          argc++;
+        }
         /* Align stack to 4 bytes */
         uint8_t word_align = 4 - (char_count % 4);
         *esp -= word_align;
-        memset(*esp, 0, word_align);
+        memset(*esp, 0, sizeof(uint8_t));
+
+        *esp -= sizeof(char*);
+        memset(*esp, 0, sizeof(char*));
 
         /* Push the addresses of the arguments */
-        for(int i = argc; i >= 0; i--)
+        for(int i = argc; i > 0; i--)
         {
           *esp -= sizeof(char *);
           memcpy(*esp, &argv[i - 1], sizeof(char *));
         }
 
-        uint32_t dw = (uint32_t)PHYS_BASE - (uint32_t) *esp;
-
-        printf("%p\t%p\t%d\n", PHYS_BASE, *esp, dw );
-
-        hex_dump((uintptr_t) *esp, *esp, dw, true);
-
-        // argv
-        token = *esp;
+        // Push in argv
+        char * tmp = *esp;
         *esp -= sizeof(char **);
-        memcpy(*esp, &token, sizeof(char **));
+        memcpy(*esp, &tmp, sizeof(char **));
 
-        // argc
+        // Push in argc
         *esp -= sizeof(int);
-        memcpy(*esp, argc, sizeof(int));
+        memcpy(*esp, &argc, sizeof(int));
 
-        // return address
+        // Push in return address
         *esp -= sizeof(void *);
-        memcpy(*esp, val, sizeof(void *));
+        memset(*esp, 0, sizeof(void *));
 
       /*------------------------------------------------------------ADDED BY CRIMSON*/  
       } 
