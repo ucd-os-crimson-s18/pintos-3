@@ -4,6 +4,7 @@
 #include <debug.h>
 #include <list.h>
 #include <stdint.h>
+#include "userprog/process.h"
 
 /* States in a thread's life cycle. */
 enum thread_status
@@ -98,7 +99,7 @@ struct thread
     uint32_t *pagedir;                  /* Page directory. */
     /*------------------------------------------------------------ADDED BY CRIMSON*/ 
     struct list children_list;
-    struct process_control_block;
+    struct process_control_block *pcb;
     /*------------------------------------------------------------ADDED BY CRIMSON*/ 
 #endif
 

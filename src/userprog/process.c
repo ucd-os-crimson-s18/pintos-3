@@ -32,9 +32,9 @@ process_execute (const char *file_name)
   tid_t tid;
   /*------------------------------------------------------------ADDED BY CRIMSON*/  
   char *save_ptr; /* Used to keep track of tokenizer's position */
-  struct thread *cur = thread_current (); // this thread will become parent to new thread
+  struct thread *curr = thread_current (); // this thread will become parent to new thread
   struct process_control_block *pcb; // holds info connecting parent and child
-  
+  struct list children_list;
 
   /*------------------------------------------------------------ADDED BY CRIMSON*/ 
     
@@ -49,15 +49,17 @@ process_execute (const char *file_name)
   /* Extract the name of the executable */
   char *exe_name = strtok_r(file_name, " ", &save_ptr);
 
-
+  list_init(&children_list)
+  curr->children_list = children_list;
+  
   /* Set up pcb for new process */
+  pcb = palloc_get_page(0);
   pcb->args = fn_copy;
   pcb->parent = curr;
   pcb->exit_code = -1;
 
   sema_init(&pcb->child_load,0);
   sema_init(&pcb->child_dead,0);
-  
   
 
   /* Pass pcb to thread_create which includes args */ 
@@ -95,6 +97,7 @@ start_process (void *pcb)
   bool success;
   char *file_name = pcb_cp->args;
   struct thread *curr = thread_current();
+  struct child *child;
 
   /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
@@ -108,9 +111,17 @@ start_process (void *pcb)
   if (!success) 
     thread_exit (-1);
 
-  curr->pcb = pcb;
-  pcb->pid = curr->tid;
-  sema_up(&pcb->child_load) // child has been loaded, wake up parent waiting
+
+  child = palloc_get_page(0);
+  child->pid = curr->tid;
+  child->success = 1;
+  
+  
+  curr->pcb = pcb_cp;
+  pcb_cp->pid = curr->tid;
+  pcb_cp->child_elem = (list_elem)child;
+  
+  sema_up(&pcb_cp->child_load);  // child has been loaded, wake up parent waiting
   
   
 
