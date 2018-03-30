@@ -45,7 +45,7 @@ process_execute (const char *file_name)
   /* Extract the name of the executable */
   char *exe_name = strtok_r(fn_copy, " ", &save_ptr); 
 
-  struct child_process* cp = malloc(sizeof(child_process));
+  struct child_process* cp = malloc(sizeof(struct child_process));
 
   cp->parent = cur;
   cp->args = fn_copy;
@@ -69,9 +69,11 @@ process_execute (const char *file_name)
 /* A thread function that loads a user process and starts it
    running. */
 static void
-start_process (void *cp)
+start_process (void *cp_)
 {
-  char *file_name = file_name_;
+  struct thread* cur = thread_current();
+  struct child_process * cp = cp_;
+  char *file_name = cp->args;
   struct intr_frame if_;
   bool success;
 
@@ -85,9 +87,14 @@ start_process (void *cp)
 
   if(success)
   {
+    list_push_back(&(cp->parent->children_list), &cp->child_elem);
+    cp->parent->cp_ptr = cp;
+    cp->status = ALIVE;
+    cp->pid = cur->tid;
+    cp->exit_status = 0;
+    sema_init(&cp->child_dead, 0);
 
-
-    sema_up(&(cp))
+    sema_up(&(cp->parent->child_load));
   }
 
   /* If load failed, quit. */

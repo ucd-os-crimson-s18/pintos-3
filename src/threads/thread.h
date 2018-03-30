@@ -4,6 +4,7 @@
 #include <debug.h>
 #include <list.h>
 #include <stdint.h>
+#include "threads/synch.h"
 
 #include "userprog/process.h"
 
@@ -100,7 +101,7 @@ struct thread
     uint32_t *pagedir;                  /* Page directory. */
     /*------------------------------------------------------------ADDED BY CRIMSON*/ 
     struct list children_list;
-    struct child_process * cp;  
+    struct child_process * cp_ptr;  
     struct semaphore child_load;        /* Synch loading of child */
     /*------------------------------------------------------------ADDED BY CRIMSON*/ 
 #endif
