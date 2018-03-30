@@ -96,6 +96,9 @@ struct thread
 #ifdef USERPROG
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /* Page directory. */
+    /*------------------------------------------------------------ADDED BY CRIMSON*/ 
+    struct list children_list;
+    /*------------------------------------------------------------ADDED BY CRIMSON*/ 
 #endif
 
     /* Owned by thread.c. */
@@ -123,7 +126,8 @@ struct thread *thread_current (void);
 tid_t thread_tid (void);
 const char *thread_name (void);
 
-void thread_exit (void) NO_RETURN;
+/* Changed to take in a status */
+void thread_exit (int) NO_RETURN;
 void thread_yield (void);
 
 /* Performs some operation on thread t, given auxiliary data AUX. */

@@ -22,12 +22,13 @@ syscall_init (void)
 static void
 syscall_handler (struct intr_frame *f) 
 {
+    /*------------------------------------------------------------ADDED BY CRIMSON*/ 
   // Check if f->esp is a valid pointer
-  // Valid pointer if it is in user address space?
-  /*if (!(validate_ptr(*(uint8_t*)f->esp)))
+  if (!(check_ptr(f->esp)))
   {
-    syscall_exit(-1);
-  }*/
+    thread_exit (-1);
+  }
+
   switch(*(int*)f->esp)
   {
     /* Halt the operating system. */
@@ -43,7 +44,7 @@ syscall_handler (struct intr_frame *f)
       /* Get the first argument, cast to int */
       int status = *((int*)f->esp + 1);
       /* Run the syscall function */
-      thread_exit ();
+      syscall_exit (status);
 
       break;
     } 
@@ -190,7 +191,7 @@ a status of 0 indicates success and nonzero values indicate errors.
 void 
 syscall_exit (int status)
 {
-  process_exit();
+  thread_exit(status);
 }
 
 /*
@@ -367,15 +368,15 @@ syscall_close (int fd)
 }
 
 
-bool
-validate_ptr(const uint8_t *address)
+static bool
+check_ptr(void *esp)
 {
-  if(is_user_vaddr (address))
+  if(get_user((uint8_t *) esp) == -1)
   {
-    return 1;
+    return false;
   }
   else
-    return 0;
+    return true;
 
 }
 
@@ -403,3 +404,4 @@ put_user (uint8_t *udst, uint8_t byte)
   : "=&a" (error_code), "=m" (*udst) : "q" (byte));
   return error_code != -1;
 }
+  /*------------------------------------------------------------ADDED BY CRIMSON*/ 
