@@ -4,7 +4,7 @@
 #include "userprog/process.h"
 
 void syscall_init (void);
-
+  /*------------------------------------------------------------ADDED BY CRIMSON*/ 
 void syscall_halt (void);
 void syscall_exit (int);
 pid_t syscall_exec (const char *);
@@ -19,8 +19,9 @@ void syscall_seek (int, unsigned);
 unsigned syscall_tell (int);
 void syscall_close (int);
 
+static bool check_ptr(void *);
 static int get_user (const uint8_t *);
-
-bool validate_ptr(const uint8_t *);
+static bool put_user (uint8_t *udst, uint8_t byte);
+  /*------------------------------------------------------------ADDED BY CRIMSON*/ 
 
 #endif /* userprog/syscall.h */
