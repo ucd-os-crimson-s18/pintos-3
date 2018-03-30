@@ -31,6 +31,7 @@ process_execute (const char *file_name)
 {
   char *fn_copy;
   tid_t tid;
+  struct thread *cur = thread_current ();
     
   /* Make a copy of FILE_NAME.
      Otherwise there's a race between the caller and load(). */
@@ -43,12 +44,24 @@ process_execute (const char *file_name)
   char *save_ptr; /* Used to keep track of tokenizer's position */
   /* Extract the name of the executable */
   char *exe_name = strtok_r(fn_copy, " ", &save_ptr); 
+
+  struct child_process* cp = malloc(sizeof(child_process));
+
+  cp->parent = cur;
+  cp->args = fn_copy;
+
+  sema_init(&(cur->child_load), 0);
+  sema_down(&(cur->child_load));
+
   /*------------------------------------------------------------ADDED BY CRIMSON*/ 
 
   /* Create a new thread to execute FILE_NAME. */
-  tid = thread_create (exe_name, PRI_DEFAULT, start_process, fn_copy);
+  tid = thread_create (exe_name, PRI_DEFAULT, start_process, cp);
   if (tid == TID_ERROR)
-    palloc_free_page (fn_copy); 
+  {
+      palloc_free_page (fn_copy); 
+      free(cp);
+  }
 
   return tid;
 }
@@ -56,7 +69,7 @@ process_execute (const char *file_name)
 /* A thread function that loads a user process and starts it
    running. */
 static void
-start_process (void *file_name_)
+start_process (void *cp)
 {
   char *file_name = file_name_;
   struct intr_frame if_;
@@ -69,6 +82,13 @@ start_process (void *file_name_)
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
   success = load (file_name, &if_.eip, &if_.esp);
+
+  if(success)
+  {
+
+
+    sema_up(&(cp))
+  }
 
   /* If load failed, quit. */
   palloc_free_page (file_name);
