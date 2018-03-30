@@ -96,6 +96,9 @@ struct thread
 #ifdef USERPROG
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /* Page directory. */
+    /*------------------------------------------------------------ADDED BY CRIMSON*/ 
+    struct list child_list;             /* List of children processes of this thread
+   /*------------------------------------------------------------ADDED BY CRIMSON*/ 
 #endif
 
     /* Owned by thread.c. */
