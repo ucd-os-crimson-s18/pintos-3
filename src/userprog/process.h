@@ -56,6 +56,15 @@ struct child
         struct semaphore child_dead;        /* Synch dying of child (wait) */
         struct list_elem child_elem;        /* Parent uses to add to its child list */
     }
+
+
+struct parent
+    {
+      pid_t pid;
+      struct semaphore child_load;        /* Synch loading of child */
+      struct semaphore child_dead;        /* Synch dying of child (wait) */
+      struct list_elem child_elem;        /* Parent uses to add to its child list */
+    }
     
 /*------------------------------------------------------------ADDED BY CRIMSON*/ 
 

@@ -32,6 +32,10 @@ process_execute (const char *file_name)
   tid_t tid;
   /*------------------------------------------------------------ADDED BY CRIMSON*/  
   char *save_ptr; /* Used to keep track of tokenizer's position */
+  struct thread *cur = thread_current (); // this thread will become parent to new thread
+  struct parent *parent;
+  struct semaphore child_load;
+  struct semaphore child_dead;
   /*------------------------------------------------------------ADDED BY CRIMSON*/ 
     
   /* Make a copy of FILE_NAME.
@@ -44,13 +48,29 @@ process_execute (const char *file_name)
   /*------------------------------------------------------------ADDED BY CRIMSON*/  
   /* Extract the name of the executable */
   char *exe_name = strtok_r(file_name, " ", &save_ptr);
-  /*------------------------------------------------------------ADDED BY CRIMSON*/ 
 
-  /* Pass executable name into thread create instead of raw file name */
-  tid = thread_create (exe_name, PRI_DEFAULT, start_process, fn_copy);
+
+  /* Set up parent struct to pass to child */
+  parent->pid = (pid_t)cur->tid_t;
+  parent->child_load = child_load;
+  parent->child_dead = child_dead;
+  
+
+  /* Pass executable name into thread create instead of raw file name 
+   Also pass the parent info to thread_create*/
+  tid = thread_create (exe_name, PRI_DEFAULT, start_process, fn_copy, parent);
   if (tid == TID_ERROR)
-    palloc_free_page (fn_copy); 
+  {  
+    palloc_free_page (fn_copy);
+  }
+  else
+  {
+
+    
+  }
   return tid;
+
+  /*------------------------------------------------------------ADDED BY CRIMSON*/ 
 }
 
 
@@ -519,6 +539,8 @@ setup_stack (void **esp, char *file_name, char* save_ptr)
     }
   return success;
 }
+
+
 
 /* Adds a mapping from user virtual address UPAGE to kernel
    virtual address KPAGE to the page table.
