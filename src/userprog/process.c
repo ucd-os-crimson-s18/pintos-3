@@ -18,6 +18,7 @@
 #include "threads/palloc.h"
 #include "threads/thread.h"
 #include "threads/vaddr.h"
+#include "threads/synch.h"
 
 static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
@@ -49,9 +50,7 @@ process_execute (const char *file_name)
 
   cp->parent = cur;
   cp->args = fn_copy;
-
   sema_init(&(cur->child_load), 0);
-  sema_down(&(cur->child_load));
 
   /*------------------------------------------------------------ADDED BY CRIMSON*/ 
 
@@ -62,6 +61,8 @@ process_execute (const char *file_name)
       palloc_free_page (fn_copy); 
       free(cp);
   }
+
+  sema_down(&(cur->child_load));
 
   return tid;
 }
@@ -125,13 +126,35 @@ start_process (void *cp_)
 int
 process_wait (tid_t child_tid) 
 {
-  //return -1;
-  // Temporary fix to process wait
-  while(true)
+  struct thread * cur = thread_current();
+  struct list * child_list = &(cur->children_list);
+  struct list_elem *e;
+  struct child_process *cp = NULL;
+
+  if(!list_empty(child_list))
   {
-    thread_yield();
+    for (e = list_begin (&child_list); e != list_end (&child_list); e = list_next (e))
+    {
+      struct child_process *tmp = list_entry (e, struct child_process, child_elem);
+      if(tmp->pid = child_tid)
+      {
+        cp = tmp;
+        break;
+      }
+    }
+
+    if(cp = NULL)
+    {
+      return -1;
+    }
+
+    if(cp->status == ALIVE)
+    {
+      sema_down(&(cp->child_dead));
+    }
+
+    return cp->exit_status;
   }
- 
 }
 
 /* Free the current process's resources. */
@@ -141,6 +164,9 @@ process_exit (int status)
   struct thread *cur = thread_current ();
   uint32_t *pd;
 
+  list_remove(&cur->cp_ptr->child_elem);
+  cur->cp_ptr->status = ONE_ALIVE;
+  sema_up(&(cur->cp_ptr->child_dead));
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
   pd = cur->pagedir;
