@@ -88,12 +88,13 @@ start_process (void *cp_)
 
   if(success)
   {
-    list_push_back(&(cp->parent->children_list), &cp->child_elem);
+    list_push_back(&(cp->parent->children_list), &(cp->child_elem));
+    cur->parent = cp->parent;
     cp->parent->cp_ptr = cp;
     cp->status = ALIVE;
     cp->pid = cur->tid;
     cp->exit_status = 0;
-    sema_init(&cp->child_dead, 0);
+    sema_init(&(cp->child_dead), 0);
 
     sema_up(&(cp->parent->child_load));
   }
@@ -153,6 +154,9 @@ process_wait (tid_t child_tid)
       sema_down(&(cp->child_dead));
     }
 
+    list_remove(&(cp->child_elem));
+    cp->status = ONE_ALIVE;
+
     return cp->exit_status;
   }
 }
@@ -164,9 +168,8 @@ process_exit (int status)
   struct thread *cur = thread_current ();
   uint32_t *pd;
 
-  list_remove(&cur->cp_ptr->child_elem);
-  cur->cp_ptr->status = ONE_ALIVE;
-  sema_up(&(cur->cp_ptr->child_dead));
+  sema_up(&(cur->parent->cp_ptr->child_dead));
+
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
   pd = cur->pagedir;
