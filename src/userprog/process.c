@@ -134,17 +134,17 @@ process_wait (tid_t child_tid)
 
   if(!list_empty(child_list))
   {
-    for (e = list_begin (&child_list); e != list_end (&child_list); e = list_next (e))
+    for (e = list_begin (child_list); e != list_end (child_list); e = list_next (e))
     {
       struct child_process *tmp = list_entry (e, struct child_process, child_elem);
-      if(tmp->pid = child_tid)
+      if(tmp->pid == child_tid)
       {
         cp = tmp;
         break;
       }
     }
 
-    if(cp = NULL)
+    if(cp == NULL)
     {
       return -1;
     }
