@@ -16,15 +16,21 @@ enum process_status
 typedef int pid_t;
 typedef int tid_t;
 
+struct child_exec
+    {
+        bool success;                       /* Child created */  
+        char* name;                         /* Process name */
+        struct semaphore sema_load;        /* Synch loading of child */
+        struct child * child_ptr;           /* Pointer to child struct */
+    };
+
 struct child
     {
         pid_t pid;                          /* Process identifier */
         enum process_status status;         /* Process state */
-        bool success;                       /* Child created */
-        int exit_code;                      /* How child exited */
+        int exit_status;                      /* How child exited */
         struct lock rw_lock;                /* Protect read/write */
-        struct semaphore child_load;        /* Synch loading of child */
-        struct semaphore child_dead;        /* Synch dying of child (wait) */
+        struct semaphore sema_dead;        /* Synch dying of child (wait) */
         struct list_elem child_elem;        /* Parent uses to add to its child list */
     };
 
