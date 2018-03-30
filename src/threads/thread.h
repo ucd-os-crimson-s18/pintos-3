@@ -98,6 +98,7 @@ struct thread
     uint32_t *pagedir;                  /* Page directory. */
     /*------------------------------------------------------------ADDED BY CRIMSON*/ 
     struct list children_list;
+    struct process_control_block;
     /*------------------------------------------------------------ADDED BY CRIMSON*/ 
 #endif
 

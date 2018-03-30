@@ -58,12 +58,16 @@ struct child
     }
 
 
-struct parent
+struct process_control_block
     {
-      pid_t pid;
+      pid_t pid;                          /*pid of child */
       struct semaphore child_load;        /* Synch loading of child */
       struct semaphore child_dead;        /* Synch dying of child (wait) */
+      char *args;                         /* Args passed to thread_create*/
       struct list_elem child_elem;        /* Parent uses to add to its child list */
+      struct thread *parent;              /*Parent of new child */
+      int32_t exit_code;                  /*Exist code passed from exit()*/
+
     }
     
 /*------------------------------------------------------------ADDED BY CRIMSON*/ 

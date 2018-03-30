@@ -33,9 +33,9 @@ process_execute (const char *file_name)
   /*------------------------------------------------------------ADDED BY CRIMSON*/  
   char *save_ptr; /* Used to keep track of tokenizer's position */
   struct thread *cur = thread_current (); // this thread will become parent to new thread
-  struct parent *parent;
-  struct semaphore child_load;
-  struct semaphore child_dead;
+  struct process_control_block *pcb; // holds info connecting parent and child
+  
+
   /*------------------------------------------------------------ADDED BY CRIMSON*/ 
     
   /* Make a copy of FILE_NAME.
@@ -50,22 +50,32 @@ process_execute (const char *file_name)
   char *exe_name = strtok_r(file_name, " ", &save_ptr);
 
 
-  /* Set up parent struct to pass to child */
-  parent->pid = (pid_t)cur->tid_t;
-  parent->child_load = child_load;
-  parent->child_dead = child_dead;
+  /* Set up pcb for new process */
+  pcb->args = fn_copy;
+  pcb->parent = curr;
+  pcb->exit_code = -1;
+
+  sema_init(&pcb->child_load,0);
+  sema_init(&pcb->child_dead,0);
+  
   
 
-  /* Pass executable name into thread create instead of raw file name 
-   Also pass the parent info to thread_create*/
-  tid = thread_create (exe_name, PRI_DEFAULT, start_process, fn_copy, parent);
+  /* Pass pcb to thread_create which includes args */ 
+
+  tid = thread_create (exe_name, PRI_DEFAULT, start_process, pcb);
   if (tid == TID_ERROR)
   {  
     palloc_free_page (fn_copy);
   }
   else
   {
-
+    // wait for child to initialize
+    sema_down(&pcb->child_load);
+    // child process created successfully
+    if(pcb->pid > 0)
+    {
+      list_push_back(&(curr->children_list), &(pcb->child_elem));
+    }
     
   }
   return tid;
@@ -78,11 +88,13 @@ process_execute (const char *file_name)
 /* A thread function that loads a user process and starts it
    running. */
 static void
-start_process (void *file_name_)
+start_process (void *pcb)
 {
-  char *file_name = file_name_;
+  struct process_control_block *pcb_cp = pcb;
   struct intr_frame if_;
   bool success;
+  char *file_name = pcb_cp->args;
+  struct thread *curr = thread_current();
 
   /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
@@ -95,6 +107,12 @@ start_process (void *file_name_)
   palloc_free_page (file_name);
   if (!success) 
     thread_exit (-1);
+
+  curr->pcb = pcb;
+  pcb->pid = curr->tid;
+  sema_up(&pcb->child_load) // child has been loaded, wake up parent waiting
+  
+  
 
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
