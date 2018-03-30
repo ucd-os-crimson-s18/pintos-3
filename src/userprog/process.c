@@ -31,13 +31,6 @@ process_execute (const char *file_name)
 {
   char *fn_copy;
   tid_t tid;
-  /*------------------------------------------------------------ADDED BY CRIMSON*/  
-  char *save_ptr; /* Used to keep track of tokenizer's position */
-  struct thread *curr = thread_current (); // this thread will become parent to new thread
-  struct process_control_block *pcb; // holds info connecting parent and child
-  struct list children_list;
-
-  /*------------------------------------------------------------ADDED BY CRIMSON*/ 
     
   /* Make a copy of FILE_NAME.
      Otherwise there's a race between the caller and load(). */
@@ -47,60 +40,28 @@ process_execute (const char *file_name)
   strlcpy (fn_copy, file_name, PGSIZE);
 
   /*------------------------------------------------------------ADDED BY CRIMSON*/  
+  char *save_ptr; /* Used to keep track of tokenizer's position */
   /* Extract the name of the executable */
-  char *exe_name = strtok_r(fn_copy, " ", &save_ptr);
+  char *exe_name = strtok_r(fn_copy, " ", &save_ptr); 
   /*------------------------------------------------------------ADDED BY CRIMSON*/ 
 
-  list_init(&children_list)
-  curr->children_list = children_list;
-  
-  /* Set up pcb for new process */
-  pcb = palloc_get_page(0);
-  pcb->args = fn_copy;
-  pcb->parent = curr;
-  pcb->exit_code = -1;
-
-  sema_init(&pcb->child_load,0);
-  sema_init(&pcb->child_dead,0);
-  
-
-  /* Pass pcb to thread_create which includes args */ 
-
-  tid = thread_create (exe_name, PRI_DEFAULT, start_process, pcb);
+  /* Create a new thread to execute FILE_NAME. */
+  tid = thread_create (exe_name, PRI_DEFAULT, start_process, fn_copy);
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy); 
 
-  /*------------------------------------------------------------ADDED BY CRIMSON*/ 
-  struct child_exec *ce;    /* Create child execute struct */
-  ce->success = 0;    /* Initialize success to 0 */
-  ce->name = exe_name;  /* Set program name */
-  sema_init(&(ce->sema_load), 0);  /* Initialize load semaphore to 0 */
-  ce->child_ptr = NULL;
-
-  thread_current()->ce_ptr = ce;
-
-  /* Wait for load. */
-  sema_down (&ce->sema_load);
-  /*------------------------------------------------------------ADDED BY CRIMSON*/ 
-
   return tid;
-
-  /*------------------------------------------------------------ADDED BY CRIMSON*/ 
 }
-
-
 
 /* A thread function that loads a user process and starts it
    running. */
 static void
-start_process (void *pcb)
+start_process (void *file_name_)
 {
-  struct process_control_block *pcb_cp = pcb;
+  char *file_name = file_name_;
   struct intr_frame if_;
   bool success;
-  char *file_name = pcb_cp->args;
-  struct thread *curr = thread_current();
-  struct child *child;
+
 
   /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
@@ -109,38 +70,12 @@ start_process (void *pcb)
   if_.eflags = FLAG_IF | FLAG_MBS;
   success = load (file_name, &if_.eip, &if_.esp);
 
-  /* Check if load was successful */
-  if(success)
-  {
-    struct child *c = malloc(sizeof(struct child)); 
-    ce->child_ptr = c;
-    c->status = ALIVE;
-    c->pid = thread_current()->tid;
-    sema_init((c->sema_dead), 0);
-
-    sema_up (&ce->sema_load);
-  }
-  /* If successful add to children list*/
-
   /* If load failed, quit. */
   palloc_free_page (file_name);
   if (!success) 
     thread_exit (-1);
-
-
-  child = palloc_get_page(0);
-  child->pid = curr->tid;
-  child->success = 1;
   
   
-  curr->pcb = pcb_cp;
-  pcb_cp->pid = curr->tid;
-  pcb_cp->child_elem = (list_elem)child;
-  
-  sema_up(&pcb_cp->child_load);  // child has been loaded, wake up parent waiting
-  
-  
-
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
      threads/intr-stubs.S).  Because intr_exit takes all of its

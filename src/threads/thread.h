@@ -4,7 +4,6 @@
 #include <debug.h>
 #include <list.h>
 #include <stdint.h>
-#include "userprog/process.h"
 
 #include "userprog/process.h"
 
@@ -101,8 +100,7 @@ struct thread
     uint32_t *pagedir;                  /* Page directory. */
     /*------------------------------------------------------------ADDED BY CRIMSON*/ 
     struct list children_list;
-    struct 
-  
+    struct child_process * cp;  
     /*------------------------------------------------------------ADDED BY CRIMSON*/ 
 #endif
 
