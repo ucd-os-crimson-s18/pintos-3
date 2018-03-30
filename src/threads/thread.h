@@ -100,6 +100,7 @@ struct thread
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /* Page directory. */
     /*------------------------------------------------------------ADDED BY CRIMSON*/ 
+    struct thread * parent;
     struct list children_list;
     struct child_process * cp_ptr;  
     struct semaphore child_load;        /* Synch loading of child */
