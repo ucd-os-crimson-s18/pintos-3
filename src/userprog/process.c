@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <list.h>
 #include "userprog/gdt.h"
 #include "userprog/pagedir.h"
 #include "userprog/tss.h"
@@ -43,13 +44,27 @@ process_execute (const char *file_name)
 
   /*------------------------------------------------------------ADDED BY CRIMSON*/  
   /* Extract the name of the executable */
-  char *exe_name = strtok_r(file_name, " ", &save_ptr);
+  char *exe_name = strtok_r(fn_copy, " ", &save_ptr);
   /*------------------------------------------------------------ADDED BY CRIMSON*/ 
 
   /* Pass executable name into thread create instead of raw file name */
   tid = thread_create (exe_name, PRI_DEFAULT, start_process, fn_copy);
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy); 
+
+  /*------------------------------------------------------------ADDED BY CRIMSON*/ 
+  struct child_exec *ce;    /* Create child execute struct */
+  ce->success = 0;    /* Initialize success to 0 */
+  ce->name = exe_name;  /* Set program name */
+  sema_init(&(ce->sema_load), 0);  /* Initialize load semaphore to 0 */
+  ce->child_ptr = NULL;
+
+  thread_current()->ce_ptr = ce;
+
+  /* Wait for load. */
+  sema_down (&ce->sema_load);
+  /*------------------------------------------------------------ADDED BY CRIMSON*/ 
+
   return tid;
 }
 
@@ -70,6 +85,19 @@ start_process (void *file_name_)
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
   success = load (file_name, &if_.eip, &if_.esp);
+
+  /* Check if load was successful */
+  if(success)
+  {
+    struct child *c = malloc(sizeof(struct child)); 
+    ce->child_ptr = c;
+    c->status = ALIVE;
+    c->pid = thread_current()->tid;
+    sema_init((c->sema_dead), 0);
+
+    sema_up (&ce->sema_load);
+  }
+  /* If successful add to children list*/
 
   /* If load failed, quit. */
   palloc_free_page (file_name);
