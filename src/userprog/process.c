@@ -88,7 +88,7 @@ start_process (void *cp_)
 
   if(success)
   {
-    list_push_back(&(cp->parent->children_list), &cp->child_elem);
+    list_push_back(&(cp->parent->children_list), &(cp->child_elem));
     cp->parent->cp_ptr = cp;
     cp->status = ALIVE;
     cp->pid = cur->tid;
@@ -164,7 +164,7 @@ process_exit (int status)
   struct thread *cur = thread_current ();
   uint32_t *pd;
 
-  list_remove(&cur->cp_ptr->child_elem);
+  list_remove(&(cur->cp_ptr->child_elem));
   cur->cp_ptr->status = ONE_ALIVE;
   sema_up(&(cur->cp_ptr->child_dead));
   /* Destroy the current process's page directory and switch back
