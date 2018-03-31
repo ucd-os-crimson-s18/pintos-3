@@ -386,10 +386,11 @@ syscall_close (int fd)
 static bool
 check_ptr(void *esp, uint8_t size)
 {
+  printf("%p\n", esp);
   for(uint8_t i = 0; i < size; i++)
   { 
-    if(!(is_user_vaddr(esp + i) 
-      && pagedir_get_page(thread_current()->pagedir,esp) != NULL))
+    if(!(is_user_vaddr(esp + i)) 
+      && (pagedir_get_page(thread_current()->pagedir, esp) != NULL))
     {
       thread_exit(-1);
     }
@@ -397,25 +398,6 @@ check_ptr(void *esp, uint8_t size)
       return true;
   }
 }
-
-/*
-Checks each byte being read from user memory to check validity
-*/
-int check_user_read(void *addr, void *var, size_t size)
-{
- int byte_read;
- for(int i = 0; i<size; i++ )
-   {
-     byte_read = get_user(addr + i);
-     if(byte_read == -1)
-    {
-      thread_exit(-1);
-    }
-     *(char* )(var + i) = byte_read & 0xff; // takes only the first byte
-   }
- return((int)size);
-}
-
 
 /* Reads a byte at user virtual address UADDR.
 UADDR must be below PHYS_BASE.

@@ -19,7 +19,7 @@ void syscall_seek (int, unsigned);
 unsigned syscall_tell (int);
 void syscall_close (int);
 
-static bool check_ptr(void *);
+static bool check_ptr(void *, uint8_t);
 static int get_user (const uint8_t *);
 static bool put_user (uint8_t *udst, uint8_t byte);
   /*------------------------------------------------------------ADDED BY CRIMSON*/ 
