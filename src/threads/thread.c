@@ -466,6 +466,7 @@ init_thread (struct thread *t, const char *name, int priority)
 
   /*------------------------------------------------------------ADDED BY CRIMSON*/ 
   list_init (&t->children_list);
+  list_init (&t->open_files);
 
   old_level = intr_disable ();
   list_push_back (&all_list, &t->allelem);

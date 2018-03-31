@@ -320,7 +320,7 @@ syscall_open (const char *file)
   /* open the file */
   struct file *f = filesys_open(file);
   struct file_desc *fd;
- 
+  struct thread *cur = thread_current();
 
  
   if(f != NULL)
@@ -329,8 +329,8 @@ syscall_open (const char *file)
     fd->fd = increment_fd();
     fd->tid = thread_current()->tid;
     fd->f = f;
-    list_push_back(&open_files, &fd->fd_elem);
-    list_push_back(&thread_current()->open_files, &fd->thread_elem);
+    list_push_back(&open_files, &(fd->fd_elem));
+    //list_push_back(&(cur->open_files), &(fd->thread_elem));
 
     ret = fd->fd;
   }
@@ -438,8 +438,8 @@ syscall_close (int fd)
 
   /* close the file */
   file_close(file_d->f);
-  list_remove(&file_d->fd_elem);
-  list_remove(&file_d->thread_elem);
+  list_remove(&(file_d->fd_elem));
+  // list_remove(&(file_d->thread_elem));
   free(file_d);
 }
 

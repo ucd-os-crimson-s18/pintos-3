@@ -47,7 +47,6 @@ process_execute (const char *file_name)
   cp->parent = cur;
   cp->args = fn_copy;
   sema_init(&(cur->child_load), 0);
-  list_init(&(cur->open_files));
 
   /*------------------------------------------------------------ADDED BY CRIMSON*/  
   char *save_ptr; /* Used to keep track of tokenizer's position */
