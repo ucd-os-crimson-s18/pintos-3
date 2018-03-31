@@ -319,6 +319,10 @@ int
 syscall_read (int fd, void *buffer, unsigned size)
 {
 
+  // fd = 0 is stdin
+
+
+  
 }
 
 /*
