@@ -30,6 +30,11 @@ struct file_desc
         struct file * f;
         struct list_elem fd_elem;
     }
+
+  struct list open_files; // list corresponds to list_elem in file_desc
+
+struct lock filesys_lock; // lock on whole file system
+  
   /*------------------------------------------------------------ADDED BY CRIMSON*/ 
 
 #endif /* userprog/syscall.h */
