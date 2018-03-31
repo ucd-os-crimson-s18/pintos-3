@@ -330,7 +330,7 @@ syscall_open (const char *file)
     fd->tid = thread_current()->tid;
     fd->f = f;
     list_push_back(&open_files, &(fd->fd_elem));
-    //list_push_back(&(cur->open_files), &(fd->thread_elem));
+    //list_push_back(&(cur->files), &(fd->thread_elem));
 
     ret = fd->fd;
   }
@@ -421,18 +421,16 @@ file descriptors, as if by calling this function for each one.
 void 
 syscall_close (int fd)
 {
-  /* check to see if valid file pointer */
-  check_ptr(fd, 4);
 
   struct thread *cur = thread_current();
   struct list_elem *e;
   struct file_desc *file_d = NULL;
 
   /* Find file pertaining to fd */
-  for (e = list_begin (&cur->open_files); e != list_end (&cur->open_files); e = list_next (e))
+  for (e = list_begin (&open_files); e != list_end (&open_files); e = list_next (e))
   {
-     file_d = list_entry (e, struct file_desc, thread_elem);
-     if (file_d->fd == fd)
+     file_d = list_entry (e, struct file_desc, fd_elem);
+     if (file_d->fd == fd && file_d->tid == cur->tid)
         break;
    }
 
