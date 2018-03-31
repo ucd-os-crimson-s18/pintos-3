@@ -150,6 +150,7 @@ process_wait (tid_t child_tid)
       return -1;
     }
 
+
     if(cp->status == ALIVE)
     {
       sema_down(&(cp->child_dead));
