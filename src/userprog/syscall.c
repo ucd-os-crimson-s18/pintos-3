@@ -417,26 +417,6 @@ int check_user_read(void *addr, void *var, size_t size)
 }
 
 
-/*
-Checks each byte being read from user memory to check validity
-*/
-int check_user_read(void *addr, void *var, size_t size)
-{
-  int byte_read;
-  for(int i = 0; i<size; i++ )
-    {
-      byte_read = get_user(addr + i);
-      if(byte_read == -1)
-	{
-	  thread_exit(-1);
-	}
-      *(char *)(var + i) = byte_read & 0xff; // takes only the first byte 
-    }
-  return((int)size);
-}
-
-
-
 /* Reads a byte at user virtual address UADDR.
 UADDR must be below PHYS_BASE.
 Returns the byte value if successful, -1 if a segfault
