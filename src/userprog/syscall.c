@@ -19,6 +19,8 @@ void
 syscall_init (void) 
 {
   intr_register_int (0x30, 3, INTR_ON, syscall_handler, "syscall");
+  list_init (&open_files);
+  lock_init (&filesys_lock);
 }
 
 static void
@@ -312,18 +314,29 @@ syscall_open (const char *file)
   /* check to see if valid file pointer */
   check_ptr(file, 4);
 
+  int ret = -1;
+  
+  lock_acquire(&filesys_lock);
   /* open the file */
   struct file *f = filesys_open(file);
+  struct file_desc *fd;
+ 
 
-  if(f == NULL)
+ 
+  if(f != NULL)
   {
-    return -1;
+    fd = malloc(sizeof(struct file_desc));
+    fd->fd = increment_fd();
+    fd->tid = thread_current()->tid;
+    fd->f = f;
+    list_push_back(&open_files, &fd->fd_elem);
+    list_push_back(&thread_current()->open_files, &fd->thread_elem);
+
+    ret = fd->fd;
   }
 
-  /* Failing open twice */
-  /* Each file needs its own fd */
-  else 
-    return 2;
+  lock_release(&filesys_lock);
+  return ret;
 }
 
 /*
@@ -411,9 +424,23 @@ syscall_close (int fd)
   /* check to see if valid file pointer */
   check_ptr(fd, 4);
 
-  /* Find file pertaining to fd */
-  /* close the file */
+  struct thread *cur = thread_current();
+  struct list_elem *e;
+  struct file_desc *file_d = NULL;
 
+  /* Find file pertaining to fd */
+  for (e = list_begin (&cur->open_files); e != list_end (&cur->open_files); e = list_next (e))
+  {
+     file_d = list_entry (e, struct file_desc, thread_elem);
+     if (file_d->fd == fd)
+        break;
+   }
+
+  /* close the file */
+  file_close(file_d->f);
+  list_remove(&file_d->fd_elem);
+  list_remove(&file_d->thread_elem);
+  free(file_d);
 }
 
 
@@ -460,4 +487,17 @@ put_user (uint8_t *udst, uint8_t byte)
   : "=&a" (error_code), "=m" (*udst) : "q" (byte));
   return error_code != -1;
 }
+
+
+
+/*Increases the fid by 1 each call, beginning at 2*/
+static int
+increment_fd (void)
+{
+  static int fid = 1;
+  return ++fid;
+}
+
+
+
   /*------------------------------------------------------------ADDED BY CRIMSON*/ 

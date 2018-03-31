@@ -22,6 +22,7 @@ void syscall_close (int);
 static bool check_ptr(void *, uint8_t);
 static int get_user (const uint8_t *);
 static bool put_user (uint8_t *udst, uint8_t byte);
+static int increment_fd(void);
 
 struct file_desc
     {
@@ -29,10 +30,10 @@ struct file_desc
         tid_t tid;
         struct file * f;
         struct list_elem fd_elem;
-    }
+        struct list_elem thread_elem; 
+    };
 
-  struct list open_files; // list corresponds to list_elem in file_desc
-
+struct list open_files; // list corresponds to list_elem in file_desc
 struct lock filesys_lock; // lock on whole file system
   
   /*------------------------------------------------------------ADDED BY CRIMSON*/ 
