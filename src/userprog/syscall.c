@@ -1,4 +1,5 @@
 #include "userprog/syscall.h"
+#include "userprog/pagedir.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <syscall-nr.h>
@@ -22,12 +23,9 @@ syscall_init (void)
 static void
 syscall_handler (struct intr_frame *f) 
 {
-    /*------------------------------------------------------------ADDED BY CRIMSON*/ 
+  /*------------------------------------------------------------ADDED BY CRIMSON*/ 
   // Check if f->esp is a valid pointer
-  if (!(check_ptr(f->esp)))
-  {
-    thread_exit (-1);
-  }
+  if (check_ptr(f->esp, 4))
 
   switch(*(int*)f->esp)
   {
@@ -41,8 +39,11 @@ syscall_handler (struct intr_frame *f)
     }                   
     case SYS_EXIT: /* Terminate this process. */                   
     {
+      check_ptr(f->esp + 4, 4);
+
       /* Get the first argument, cast to int */
       int status = *((int*)f->esp + 1);
+
       /* Run the syscall function */
       syscall_exit (status);
 
@@ -50,6 +51,8 @@ syscall_handler (struct intr_frame *f)
     } 
     case SYS_EXEC: /* Start another process. */
     {
+      check_ptr(f->esp + 4, 4);
+
       /* Get the first argument, cast to char* */
       const char *cmd_line = *((char*)f->esp + 1);
 
@@ -60,6 +63,8 @@ syscall_handler (struct intr_frame *f)
     }
     case SYS_WAIT: /* Wait for a child process to die. */
     {
+      check_ptr(f->esp + 4, 4);
+
       /* Get the first argument, cast to pid_t */
       pid_t pid = *((pid_t*)f->esp + 1);
 
@@ -70,6 +75,7 @@ syscall_handler (struct intr_frame *f)
     }
     case SYS_CREATE: /* Create a file. */
     {
+      check_ptr(f->esp + 4, 8);
       /* Get the first argument, cast to char*  */
       const char *file = *((char*)f->esp + 1);
       /* Get the second argument, cast to unsigned */
@@ -82,6 +88,7 @@ syscall_handler (struct intr_frame *f)
     }
     case SYS_REMOVE: /* Delete a file. */
     {
+      check_ptr(f->esp + 4, 4);
       /* Get the first argument, cast to char*  */
       const char * file = *((char*)f->esp + 1);
 
@@ -92,6 +99,7 @@ syscall_handler (struct intr_frame *f)
     }
     case SYS_OPEN: /* Open a file. */
     {
+      check_ptr(f->esp + 4, 4);
       /* Get the first argument, cast to char*  */
       const char * file = *((char*)f->esp + 1);
 
@@ -102,6 +110,7 @@ syscall_handler (struct intr_frame *f)
     }
     case SYS_FILESIZE: /* Obtain a file's size. */
     {
+      check_ptr(f->esp + 4, 4);
       /* Get the first argument, cast to int */
       int fd = *((int*)f->esp + 1);
 
@@ -112,6 +121,7 @@ syscall_handler (struct intr_frame *f)
     }
     case SYS_READ: /* Read from a file. */
     {
+      check_ptr(f->esp + 4, 12);
       /* Get the first argument, cast to int */
       int fd = *((int*)f->esp + 1);
       /* Get the second argument, cast to int* to void* */
@@ -126,6 +136,7 @@ syscall_handler (struct intr_frame *f)
     }
     case SYS_WRITE: /* Write to a file. */
     {
+      check_ptr(f->esp + 4, 12);
       /* Get the first argument, cast to int */
       int fd = *((int*)f->esp + 1);
       /* Get the second argument, cast to int* to void* */
@@ -140,6 +151,7 @@ syscall_handler (struct intr_frame *f)
     }
     case SYS_SEEK: /* Change position in a file. */
     {
+      check_ptr(f->esp + 4, 8);
       /* Get the first argument, cast to int  */
       int fd = *((int*)f->esp + 1);
       /* Get the second argument, cast to unsigned */
@@ -152,6 +164,7 @@ syscall_handler (struct intr_frame *f)
     }
     case SYS_TELL: /* Report current position in a file. */
     {
+      check_ptr(f->esp + 4, 4);
       /* Get the first argument, cast to int */
       int fd = *((int*)f->esp + 1);
 
@@ -162,6 +175,7 @@ syscall_handler (struct intr_frame *f)
     }
     case SYS_CLOSE: /* Close a file. */
     {
+      check_ptr(f->esp + 4, 4);
       /* Get the first argument, cast to int */
       int fd = *((int*)f->esp + 1);
 
@@ -370,15 +384,36 @@ syscall_close (int fd)
 
 
 static bool
-check_ptr(void *esp)
+check_ptr(void *esp, uint8_t size)
 {
-  if(get_user((uint8_t *) esp) == -1)
-  {
-    return false;
+  for(uint8_t i = 0; i < size; i++)
+  { 
+    if(!(is_user_vaddr(esp + i) 
+      && pagedir_get_page(thread_current()->pagedir,esp) != NULL))
+    {
+      thread_exit(-1);
+    }
+    else
+      return true;
   }
-  else
-    return true;
+}
 
+/*
+Checks each byte being read from user memory to check validity
+*/
+int check_user_read(void *addr, void *var, size_t size)
+{
+ int byte_read;
+ for(int i = 0; i<size; i++ )
+   {
+     byte_read = get_user(addr + i);
+     if(byte_read == -1)
+    {
+      thread_exit(-1);
+    }
+     *(char* )(var + i) = byte_read & 0xff; // takes only the first byte
+   }
+ return((int)size);
 }
 
 
