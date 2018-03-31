@@ -22,6 +22,14 @@ void syscall_close (int);
 static bool check_ptr(void *, uint8_t);
 static int get_user (const uint8_t *);
 static bool put_user (uint8_t *udst, uint8_t byte);
+
+struct file_desc
+    {
+        int fd;
+        tid_t tid;
+        struct file * f;
+        struct list_elem fd_elem;
+    }
   /*------------------------------------------------------------ADDED BY CRIMSON*/ 
 
 #endif /* userprog/syscall.h */

@@ -101,7 +101,7 @@ syscall_handler (struct intr_frame *f)
     {
       check_ptr(f->esp + 4, 4);
       /* Get the first argument, cast to char*  */
-      const char * file = *((char*)f->esp + 1);
+      const char * file = *((char**)(f->esp + 4));
 
       /* Run the syscall function, store return into eax */
       f->eax = syscall_open (file);
@@ -267,14 +267,13 @@ a separate operation which would require a open system call.
 bool 
 syscall_create (const char *file, unsigned initial_size)
 {
-  /* check to see if valid file pointer*/
+  /* check to see if valid file pointer */
   check_ptr(file, initial_size);
 
   if(file == NULL)
   {
     syscall_exit(-1);
   }
-
 
   /* create the file */
   bool success = filesys_create(file, initial_size);
@@ -310,7 +309,21 @@ position.
 int 
 syscall_open (const char *file)
 {
+  /* check to see if valid file pointer */
+  check_ptr(file, 4);
 
+  /* open the file */
+  struct file *f = filesys_open(file);
+
+  if(f == NULL)
+  {
+    return -1;
+  }
+
+  /* Failing open twice */
+  /* Each file needs its own fd */
+  else 
+    return 2;
 }
 
 /*
@@ -391,6 +404,11 @@ file descriptors, as if by calling this function for each one.
 void 
 syscall_close (int fd)
 {
+  /* check to see if valid file pointer */
+  check_ptr(fd, 4);
+
+  /* Find file pertaining to fd */
+  /* close the file */
 
 }
 
