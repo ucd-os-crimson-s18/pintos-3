@@ -386,21 +386,21 @@ syscall_close (int fd)
 static bool
 check_ptr(void *esp, uint8_t size)
 {
-  printf("%p\n", esp);
   for(uint8_t i = 0; i < size; i++)
   { 
-    if(!(is_user_vaddr(esp + i)) 
+    //printf("%p\n", esp + i);
+    if(!(is_user_vaddr(esp + i))) 
     {
 	    syscall_exit(-1);
     }
-
-    if(pagedir_get_page(thread_current()->pagedir,esp) == NULL)
+    if(pagedir_get_page(thread_current()->pagedir, esp + i) == NULL)
     {
       syscall_exit(-1);
     }
-   
-    return true;
   }
+
+
+  return true;
 }
 
 /* Reads a byte at user virtual address UADDR.
