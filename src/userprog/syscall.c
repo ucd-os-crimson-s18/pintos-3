@@ -40,7 +40,7 @@ syscall_handler (struct intr_frame *f)
     case SYS_EXIT: /* Terminate this process. */                   
     {
       check_ptr(f->esp + 4, 4);
-
+ 
       /* Get the first argument, cast to int */
       int status = *((int*)f->esp + 1);
 
@@ -390,12 +390,16 @@ check_ptr(void *esp, uint8_t size)
   for(uint8_t i = 0; i < size; i++)
   { 
     if(!(is_user_vaddr(esp + i)) 
-      && (pagedir_get_page(thread_current()->pagedir, esp) != NULL))
     {
-      thread_exit(-1);
+	    syscall_exit(-1);
     }
-    else
-      return true;
+
+    if(pagedir_get_page(thread_current()->pagedir,esp) == NULL)
+    {
+      syscall_exit(-1);
+    }
+   
+    return true;
   }
 }
 
