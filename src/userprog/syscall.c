@@ -126,6 +126,9 @@ syscall_handler (struct intr_frame *f)
     }
     case SYS_WRITE: /* Write to a file. */
     {
+
+      int fd;
+      fd = check_user_read((int*)f->esp+1,&fd,sizeof(fd))
       /* Get the first argument, cast to int */
       int fd = *((int*)f->esp + 1);
       /* Get the second argument, cast to int* to void* */
@@ -380,6 +383,26 @@ check_ptr(void *esp)
     return true;
 
 }
+
+
+/*
+Checks each byte being read from user memory to check validity
+*/
+int check_user_read(void *addr, void *var, size_t size)
+{
+  int byte_read;
+  for(int i = 0; i<size; i++ )
+    {
+      byte_read = get_user(addr + i);
+      if(byte_read == -1)
+	{
+	  thread_exit(-1);
+	}
+      *(char *)(var + i) = byte_read & 0xff; // takes only the first byte 
+    }
+  return((int)size);
+}
+
 
 
 /* Reads a byte at user virtual address UADDR.
