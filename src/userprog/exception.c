@@ -146,14 +146,14 @@ page_fault (struct intr_frame *f)
   /*------------------------------------------------------------ADDED BY CRIMSON*/  
   /* Handle an Invalid address */
 
-  if(!user) /* Check if access by kernel */
-  {
+  //  if(!user) /* Check if access by kernel */
+	// {
     /* Set eax to 0xffffffff and copy its former value into eip.*/
-    f->eip = (void (*)(void))f->eax;
-    f->eax =  0xffffffff; /* Zero it out */
-    return;
-  }
-  thread_exit(-1);
+  // f->eip = (void (*)(void))f->eax;
+  // f->eax =  0xffffffff; /* Zero it out */
+  // return;
+  // }
+  // thread_exit(-1); 
     /*------------------------------------------------------------ADDED BY CRIMSON*/  
 
   /* Determine cause. */
