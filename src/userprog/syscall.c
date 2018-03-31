@@ -1,10 +1,11 @@
-#include "userprog/syscall.h"
-#include "userprog/pagedir.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <syscall-nr.h>
 #include <user/syscall.h>
+#include "filesys/filesys.h"
 #include "userprog/process.h"
+#include "userprog/syscall.h"
+#include "userprog/pagedir.h"
 #include "threads/interrupt.h"
 #include "threads/thread.h"
 #include "threads/vaddr.h"
@@ -267,7 +268,13 @@ a separate operation which would require a open system call.
 bool 
 syscall_create (const char *file, unsigned initial_size)
 {
+  /* check to see if valid file pointer*/
+  /*using synchronization constructs:*/
 
+  /* create the file */
+  bool = filesys_create(file, initial size);
+
+  return bool;
 }
 
 /*
