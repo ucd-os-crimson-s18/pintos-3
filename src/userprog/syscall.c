@@ -1,10 +1,11 @@
-#include "userprog/syscall.h"
-#include "userprog/pagedir.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <syscall-nr.h>
 #include <user/syscall.h>
+#include "filesys/filesys.h"
 #include "userprog/process.h"
+#include "userprog/syscall.h"
+#include "userprog/pagedir.h"
 #include "threads/interrupt.h"
 #include "threads/thread.h"
 #include "threads/vaddr.h"
@@ -77,10 +78,9 @@ syscall_handler (struct intr_frame *f)
     {
       check_ptr(f->esp + 4, 8);
       /* Get the first argument, cast to char*  */
-      const char *file = *((char*)f->esp + 1);
+      const char *file = *((char**)(f->esp + 4));
       /* Get the second argument, cast to unsigned */
-      unsigned initial_size = *((unsigned*)f->esp + 2);
-
+      unsigned initial_size = *((unsigned*)(f->esp + 8));
       /* Run the syscall function, store return into eax */
       f->eax = syscall_create (file, initial_size);
 
@@ -101,7 +101,7 @@ syscall_handler (struct intr_frame *f)
     {
       check_ptr(f->esp + 4, 4);
       /* Get the first argument, cast to char*  */
-      const char * file = *((char*)f->esp + 1);
+      const char * file = *((char**)(f->esp + 4));
 
       /* Run the syscall function, store return into eax */
       f->eax = syscall_open (file);
@@ -220,7 +220,7 @@ to ensure this.
 pid_t 
 syscall_exec (const char *cmd_line)
 {
-
+  process_execute(cmd_line);
 }
 
 /*
@@ -267,7 +267,18 @@ a separate operation which would require a open system call.
 bool 
 syscall_create (const char *file, unsigned initial_size)
 {
+  /* check to see if valid file pointer */
+  check_ptr(file, initial_size);
 
+  if(file == NULL)
+  {
+    syscall_exit(-1);
+  }
+
+  /* create the file */
+  bool success = filesys_create(file, initial_size);
+
+  return success;
 }
 
 /*
@@ -278,7 +289,7 @@ not close it. See [Removing an Open File], page 35, for details.
 bool 
 syscall_remove (const char *file)
 {
-
+  return filesys_remove(file);
 }
 
 /*
@@ -298,7 +309,21 @@ position.
 int 
 syscall_open (const char *file)
 {
+  /* check to see if valid file pointer */
+  check_ptr(file, 4);
 
+  /* open the file */
+  struct file *f = filesys_open(file);
+
+  if(f == NULL)
+  {
+    return -1;
+  }
+
+  /* Failing open twice */
+  /* Each file needs its own fd */
+  else 
+    return 2;
 }
 
 /*
@@ -383,6 +408,11 @@ file descriptors, as if by calling this function for each one.
 void 
 syscall_close (int fd)
 {
+  /* check to see if valid file pointer */
+  check_ptr(fd, 4);
+
+  /* Find file pertaining to fd */
+  /* close the file */
 
 }
 
@@ -390,7 +420,7 @@ syscall_close (int fd)
 static bool
 check_ptr(void *esp, uint8_t size)
 {
-  for(uint8_t i = 0; i < size; i++)
+  for(uint8_t i = 0; i <= size; i++)
   { 
     //printf("%p\n", esp + i);
     if(!(is_user_vaddr(esp + i))) 
