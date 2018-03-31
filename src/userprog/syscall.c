@@ -191,6 +191,7 @@ a status of 0 indicates success and nonzero values indicate errors.
 void 
 syscall_exit (int status)
 {
+  printf("%s: exit(%d)\n", thread_current()->name, status);
   thread_exit(status);
 }
 
