@@ -458,12 +458,12 @@ file system and do not require any special effort in system call implementation.
 void 
 syscall_seek (int fd, unsigned position)
 {
-  struct file_desc f_desc;
+  struct file_desc *f_desc;
   lock_acquire(&filesys_lock);
   f_desc = find_open_file(fd);
   if(f_desc != NULL);
   {
-    // add here
+    file_seek (f_desc->f, position);
   }
   lock_release(&filesys_lock);
 }
@@ -475,12 +475,13 @@ in bytes from the beginning of the file.
 unsigned 
 syscall_tell (int fd)
 {
-  struct file_desc f_desc;
+  struct file_desc *f_desc;
+  unsigned ret = 0;
   lock_acquire(&filesys_lock);
   f_desc = find_open_file(fd);
   if(f_desc != NULL);
   {
-    // add here
+    ret = file_tell(f_desc->f);
   }
   lock_release(&filesys_lock);
 }
