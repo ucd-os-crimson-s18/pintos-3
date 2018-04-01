@@ -27,15 +27,15 @@ struct file_desc *find_open_file(int);
 
 struct file_desc
     {
-        int fd;
-        tid_t tid;
-        struct file * f;
-        struct list_elem fd_elem;
-        struct list_elem thread_elem; 
+        int fd;                       /* Int to hold the file descriptor */
+        tid_t tid;                    /* thread id to get thread */
+        struct file * f;              /* Pointer to a file struct */
+        struct list_elem fd_elem;     /* file descriptor list element */
+        struct list_elem thread_elem; /* thread list element */
     };
 
-struct list open_files; // list corresponds to list_elem in file_desc
-struct lock filesys_lock; // lock on whole file system
+struct list open_files;   /* list of open files */
+struct lock filesys_lock; /* lock for the file system */
   
   /*------------------------------------------------------------ADDED BY CRIMSON*/ 
 

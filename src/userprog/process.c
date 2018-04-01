@@ -42,24 +42,24 @@ process_execute (const char *file_name)
     return TID_ERROR;
   strlcpy (fn_copy, file_name, PGSIZE);
 
+  /*------------------------------------------------------------ADDED BY CRIMSON*/  
   fn_copy2 = palloc_get_page (0);
   if (fn_copy2 == NULL)
     return TID_ERROR;
   strlcpy (fn_copy2, file_name, PGSIZE);
 
-  
   struct child_process* cp = malloc(sizeof(struct child_process));
 
   cp->parent = cur;
   cp->args = fn_copy;
   sema_init(&(cur->child_load), 0);
 
-  /*------------------------------------------------------------ADDED BY CRIMSON*/  
+  
   char *save_ptr; /* Used to keep track of tokenizer's position */
   /* Extract the name of the executable */
   
   char *exe_name = strtok_r(fn_copy2, " ", &save_ptr); 
-  
+  /*------------------------------------------------------------ADDED BY CRIMSON*/  
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (exe_name, PRI_DEFAULT, start_process, cp);
   if (tid == TID_ERROR)
@@ -67,8 +67,10 @@ process_execute (const char *file_name)
       palloc_free_page (fn_copy); 
       free(cp);
   }
-
-  sema_down(&(cur->child_load));
+  else
+  {
+    sema_down(&(cur->child_load));
+  }
 
   /*------------------------------------------------------------ADDED BY CRIMSON*/  
   return tid;
