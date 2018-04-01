@@ -426,6 +426,8 @@ syscall_close (int fd)
   struct list_elem *e;
   struct file_desc *file_d = NULL;
 
+  lock_acquire(&filesys_lock);
+
   /* Find file pertaining to fd */
   for (e = list_begin (&open_files); e != list_end (&open_files); e = list_next (e))
   {
@@ -434,10 +436,17 @@ syscall_close (int fd)
         break;
    }
 
+  /* If file doesn't exist, terminate */
+  if(file_d == NULL){
+    lock_release(&filesys_lock);
+    syscall_exit(-1);
+  }
+  
   /* close the file */
   file_close(file_d->f);
   list_remove(&(file_d->fd_elem));
   // list_remove(&(file_d->thread_elem));
+  lock_release(&filesys_lock);
   free(file_d);
 }
 
