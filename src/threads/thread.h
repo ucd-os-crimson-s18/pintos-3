@@ -105,6 +105,7 @@ struct thread
     struct child_process * cp_ptr;  
     struct semaphore child_load;        /* Synch loading of child */
     struct list files;
+    struct file *exe;
     /*------------------------------------------------------------ADDED BY CRIMSON*/ 
 #endif
 
