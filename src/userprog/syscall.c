@@ -272,9 +272,26 @@ syscall_wait (pid_t pid)
   {
     syscall_exit(-1);
   }
-    
-  int exit_status =  process_wait(pid);
-  return exit_status;
+
+  struct list *child_list = &(thread_current()->children_list);
+  struct list_elem *e;
+  struct child_process *cp;
+
+  if(!list_empty(child_list))
+  {
+    for (e = list_begin (child_list); e != list_end (child_list); e = list_next (e))
+    {
+      cp = list_entry (e, struct child_process, child_elem);
+      if(cp->pid == pid)
+      {
+	
+	list_remove(&(cp->child_elem));
+	return cp->exit_status;
+      }
+    }
+  }
+ 
+  return -1;
 }
 
 /*
