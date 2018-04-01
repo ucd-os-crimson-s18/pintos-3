@@ -31,8 +31,11 @@ Jeff McMillan Jeff.McMillan@ucdenver.edu
 >> enumeration.  Identify the purpose of each in 25 words or less.
 
 char *token - Used for the strtok_r function to hold the string
+
 char_count - Holds the count of characters of the arguments
+
 int argc - Holds the count of arguments
+
 char * argv[128] - Used to store the argument address
 
 ## ALGORITHMS ----
@@ -66,9 +69,15 @@ We kept our argument limit to 128 to avoid overflowing the stack page.
 
 >> A3: Why does Pintos implement strtok_r() but not strtok()?
 
+With strtok_r() you can call this from multiple threads simultaneously or in nested loops 
+because they take the extra argument to store the state betwen calls, while strtok() would use
+a global variable which might give undefined behaviour.
+
 >> A4: In Pintos, the kernel separates commands into a executable name
 >> and arguments.  In Unix-like systems, the shell does this
 >> separation.  Identify at least two advantages of the Unix approach.
+
+
 
 
 
@@ -79,6 +88,20 @@ We kept our argument limit to 128 to avoid overflowing the stack page.
 >> B1: Copy here the declaration of each new or changed `struct' or
 >> `struct' member, global or static variable, `typedef', or
 >> enumeration.  Identify the purpose of each in 25 words or less.
+
+```C
+struct child_process
+    {
+      pid_t pid;                          /* pid of child */
+      enum process_status status;         /* Process state */
+      int exit_status;                    /* Exit code passed from exit()*/
+      char *args;                         /* Args passed to thread_create*/
+      struct lock rw_lock;                /* Protect read/write */
+      struct semaphore child_dead;        /* Synch dying of child (wait) */
+      struct list_elem child_elem;        /* Parent uses to add to its child list */
+      struct thread *parent;              /* Parent of new child */
+     };
+```
 
 >> B2: Describe how file descriptors are associated with open files.
 >> Are file descriptors unique within the entire OS or just within a
