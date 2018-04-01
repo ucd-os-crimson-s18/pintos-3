@@ -31,6 +31,7 @@ tid_t
 process_execute (const char *file_name) 
 {
   char *fn_copy;
+  char *fn_copy2;
   tid_t tid;
   struct thread *cur = thread_current ();
     
@@ -40,6 +41,11 @@ process_execute (const char *file_name)
   if (fn_copy == NULL)
     return TID_ERROR;
   strlcpy (fn_copy, file_name, PGSIZE);
+
+  fn_copy2 = palloc_get_page (0);
+  if (fn_copy2 == NULL)
+    return TID_ERROR;
+  strlcpy (fn_copy2, file_name, PGSIZE);
 
   
   struct child_process* cp = malloc(sizeof(struct child_process));
@@ -51,7 +57,8 @@ process_execute (const char *file_name)
   /*------------------------------------------------------------ADDED BY CRIMSON*/  
   char *save_ptr; /* Used to keep track of tokenizer's position */
   /* Extract the name of the executable */
-  char *exe_name = strtok_r(file_name, " ", &save_ptr); 
+  
+  char *exe_name = strtok_r(fn_copy2, " ", &save_ptr); 
 
   
   /* Create a new thread to execute FILE_NAME. */
@@ -599,3 +606,36 @@ install_page (void *upage, void *kpage, bool writable)
   return (pagedir_get_page (t->pagedir, upage) == NULL
           && pagedir_set_page (t->pagedir, upage, kpage, writable));
 }
+
+/*
+char *get_exec_name(char *fn)
+{
+
+  int iter;
+  bool found = 0;
+  char *ret;
+  for(iter = 0; iter < strlen(fn); iter++)
+    {
+      if(fn[iter] == " ")
+	{
+	  found = 1;
+	  break;
+	}
+    }
+
+  if(found == 0)
+    {
+      ret = fn;
+    }
+  else
+    {
+      ret = malloc(iter + 1);
+      
+    }
+  
+  char *ret = malloc(iter + 1 + 1 ); // one for extra char, one for trailing zero 
+    strcpy(ret, fn);
+    str2[len] = c;
+    str2[len + 1] = '\0';
+}
+*/

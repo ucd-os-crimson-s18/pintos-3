@@ -57,7 +57,7 @@ syscall_handler (struct intr_frame *f)
       check_ptr(f->esp + 4, 4);
 
       /* Get the first argument, cast to char* */
-      const char *cmd_line = *((char*)f->esp + 1);
+      const char *cmd_line = *((char**)(f->esp + 4));
 
       /* Run the syscall function, store return into eax */
       f->eax = syscall_exec (cmd_line);
@@ -222,6 +222,7 @@ to ensure this.
 pid_t 
 syscall_exec (const char *cmd_line)
 {
+  
   process_execute(cmd_line);
 }
 
