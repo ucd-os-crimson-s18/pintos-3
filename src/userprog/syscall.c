@@ -222,9 +222,16 @@ to ensure this.
 pid_t 
 syscall_exec (const char *cmd_line)
 {
-  
+  check_ptr(cmd_line, 4);
+ 
   pid_t pid = (pid_t)(process_execute(cmd_line));
-  return process_wait(pid);
+  
+  if(process_wait(pid) == -1)
+  {
+     return -1;
+  }
+
+ return pid;
 }
 
 /*
