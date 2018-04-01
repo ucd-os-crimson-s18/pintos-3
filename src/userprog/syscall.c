@@ -223,7 +223,8 @@ pid_t
 syscall_exec (const char *cmd_line)
 {
   
-  process_execute(cmd_line);
+  pid_t pid = (pid_t)(process_execute(cmd_line));
+  return process_wait(pid);
 }
 
 /*
