@@ -30,12 +30,16 @@ Jeff McMillan Jeff.McMillan@ucdenver.edu
 >> 'struct' member, global or static variable, `typedef', or
 >> enumeration.  Identify the purpose of each in 25 words or less.
 
-char *token - Used for the strtok_r function to hold the string
+```C
+char *token``` - Used for the strtok_r function to hold the string
 
-char_count - Holds the count of characters of the arguments
+```C
+char_count``` - Holds the count of characters of the arguments
 
-int argc - Holds the count of arguments
+```C
+int argc``` - Holds the count of arguments
 
+```C
 char * argv[128] - Used to store the argument address
 
 ## ALGORITHMS ----
