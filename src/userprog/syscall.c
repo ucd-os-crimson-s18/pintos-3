@@ -267,7 +267,14 @@ Implementing this system call requires considerably more work than any of the re
 int 
 syscall_wait (pid_t pid)
 {
-  return process_wait(pid);
+  /* If pid is larger than possible number of processes, terminate */
+  if(pid > 100)
+  {
+    syscall_exit(-1);
+  }
+    
+  int exit_status =  process_wait(pid);
+  return exit_status;
 }
 
 /*
