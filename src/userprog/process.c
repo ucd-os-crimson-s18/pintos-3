@@ -86,6 +86,11 @@ start_process (void *cp_)
   struct intr_frame if_;
   bool success;
 
+  list_push_back(&(cp->parent->children_list), &(cp->child_elem));
+  cur->parent = cp->parent;
+  cp->parent->cp_ptr = cp;
+  cp->pid = cur->tid;
+  sema_init(&(cp->child_dead), 0);
 
   /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
@@ -96,21 +101,19 @@ start_process (void *cp_)
 
   if(success)
   {
-    list_push_back(&(cp->parent->children_list), &(cp->child_elem));
-    cur->parent = cp->parent;
-    cp->parent->cp_ptr = cp;
     cp->status = ALIVE;
-    cp->pid = cur->tid;
     cp->exit_status = 0;
-    sema_init(&(cp->child_dead), 0);
-
     sema_up(&(cp->parent->child_load));
   }
 
   /* If load failed, quit. */
   palloc_free_page (file_name);
-  if (!success) 
+  if (!success)
+  {  
+    cp->exit_status = -1;
+    sema_up(&(cp->parent->child_load)); 
     thread_exit (-1);
+  }
   
   
   /* Start the user process by simulating a return from an
@@ -177,8 +180,10 @@ process_exit (int status)
   struct thread *cur = thread_current ();
   uint32_t *pd;
 
-  sema_up(&(cur->parent->cp_ptr->child_dead));
 
+  sema_up(&(cur->parent->cp_ptr->child_dead));
+  
+  
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
   pd = cur->pagedir;
