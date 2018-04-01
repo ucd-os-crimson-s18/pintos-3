@@ -86,21 +86,12 @@ start_process (void *cp_)
   struct intr_frame if_;
   bool success;
 
-<<<<<<< HEAD
-  list_push_back(&(cp->parent->children_list), &(cp->child_elem));
-  cur->parent = cp->parent;
-  cp->parent->cp_ptr = cp;
-  cp->pid = cur->tid;
-  sema_init(&(cp->child_dead), 0);
-
-=======
   cur->parent = cp->parent;
   list_push_back(&(cp->parent->children_list), &(cp->child_elem));
   cp->parent->cp_ptr = cp;
   cp->pid = cur->tid;
   sema_init(&(cp->child_dead), 0);
   
->>>>>>> fa2a154998cd2a537dc0598245dc1dc4c3bb9c82
   /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
   if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
@@ -110,10 +101,7 @@ start_process (void *cp_)
 
   if(success)
   {
-<<<<<<< HEAD
-=======
   
->>>>>>> fa2a154998cd2a537dc0598245dc1dc4c3bb9c82
     cp->status = ALIVE;
     cp->exit_status = 0;
     sema_up(&(cp->parent->child_load));
@@ -121,14 +109,6 @@ start_process (void *cp_)
 
   /* If load failed, quit. */
   palloc_free_page (file_name);
-<<<<<<< HEAD
-  if (!success)
-  {  
-    cp->exit_status = -1;
-    sema_up(&(cp->parent->child_load)); 
-    thread_exit (-1);
-  }
-=======
   if (!success) 
     {
 
@@ -136,7 +116,6 @@ start_process (void *cp_)
       sema_up(&(cp->parent->child_load));
       thread_exit (-1);
     } 
->>>>>>> fa2a154998cd2a537dc0598245dc1dc4c3bb9c82
   
   
   /* Start the user process by simulating a return from an
