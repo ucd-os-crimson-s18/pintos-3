@@ -67,6 +67,7 @@ process_execute (const char *file_name)
   {
       palloc_free_page (fn_copy); 
       free(cp);
+      return -1;
   }
 
   sema_down(&(cur->child_load));
@@ -79,7 +80,7 @@ process_execute (const char *file_name)
    running. */
 static void
 start_process (void *cp_)
-{
+{        
   struct thread* cur = thread_current();
   struct child_process * cp = cp_;
   char *file_name = cp->args;
@@ -101,10 +102,6 @@ start_process (void *cp_)
 
   if(success)
   {
-<<<<<<< HEAD
-  
-=======
->>>>>>> 1ccbeccd1f6cf7772ec63873cd659650a3b23dab
     cp->status = ALIVE;
     cp->exit_status = 0;
     sema_up(&(cp->parent->child_load));
@@ -112,16 +109,6 @@ start_process (void *cp_)
 
   /* If load failed, quit. */
   palloc_free_page (file_name);
-<<<<<<< HEAD
-  if (!success) 
-    {
-
-      cp->exit_status = -1;
-      sema_up(&(cp->parent->child_load));
-      thread_exit (-1);
-    } 
-  
-=======
   if (!success)
   {  
     cp->exit_status = -1;
@@ -129,7 +116,6 @@ start_process (void *cp_)
     thread_exit (-1);
   }
 
->>>>>>> 1ccbeccd1f6cf7772ec63873cd659650a3b23dab
   
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
@@ -222,7 +208,7 @@ process_exit (int status)
    This function is called on every context switch. */
 void
 process_activate (void)
-{
+{        
   struct thread *t = thread_current ();
 
   /* Activate thread's page tables. */

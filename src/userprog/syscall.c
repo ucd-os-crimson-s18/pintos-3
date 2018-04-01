@@ -225,7 +225,7 @@ syscall_exec (const char *cmd_line)
   check_ptr(cmd_line, 4);
  
   pid_t pid = (pid_t)(process_execute(cmd_line));
-  
+
   if(process_wait(pid) == -1)
   {
      return -1;
@@ -430,7 +430,7 @@ int
 syscall_write (int fd, void *buffer, unsigned size)
 {
   /* check to see if valid file pointer */
-  check_ptr(buffer, size);
+  check_ptr(buffer, 12);
 
   struct file_desc * f_desc;
   int ret = -1;
