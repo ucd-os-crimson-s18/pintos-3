@@ -92,7 +92,7 @@ syscall_handler (struct intr_frame *f)
     {
       check_ptr(f->esp + 4, 4);
       /* Get the first argument, cast to char*  */
-      const char * file = *((char*)f->esp + 1);
+      const char * file = *((char**)(f->esp + 4));
 
       /* Run the syscall function, store return into eax */
       f->eax = syscall_remove (file);
