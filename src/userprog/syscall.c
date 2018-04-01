@@ -418,14 +418,32 @@ readers and our grading scripts.
 int 
 syscall_write (int fd, void *buffer, unsigned size)
 {
-  if(fd == 1)
+
+  struct file_desc * f_desc;
+  int ret = -1;
+
+  lock_acquire(&filesys_lock);
+
+  if(fd == 0){
+    ret = -1;
+  }
+  else if(fd == 1)
   {
     putbuf(buffer, size);
 
-    return size;
+    ret = size;
+  }
+  else
+  {
+    f_desc = find_open_file(fd);
+    if(f_desc != NULL)
+    {
+      ret = file_write(f_desc->f, buffer, size);
+    }
   }
 
-  return 0;
+  lock_release(&filesys_lock);
+  return ret;
 }
 
 /*
