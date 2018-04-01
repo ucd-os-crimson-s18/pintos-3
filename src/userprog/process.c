@@ -144,6 +144,14 @@ process_wait (tid_t child_tid)
   struct list_elem *e;
   struct child_process *cp = NULL;
 
+
+  if(list_empty(child_list))
+  {
+    int ret = cur->cp_ptr->exit_status;
+    cur->cp_ptr->exit_status = -1;
+    return ret;
+  }
+  
   if(!list_empty(child_list))
   {
     for (e = list_begin (child_list); e != list_end (child_list); e = list_next (e))
@@ -181,7 +189,7 @@ process_exit (int status)
   struct thread *cur = thread_current ();
   uint32_t *pd;
 
-
+  cur->parent->cp_ptr->exit_status = status;
   sema_up(&(cur->parent->cp_ptr->child_dead));
   
   
