@@ -101,7 +101,10 @@ start_process (void *cp_)
 
   if(success)
   {
+<<<<<<< HEAD
   
+=======
+>>>>>>> 1ccbeccd1f6cf7772ec63873cd659650a3b23dab
     cp->status = ALIVE;
     cp->exit_status = 0;
     sema_up(&(cp->parent->child_load));
@@ -109,6 +112,7 @@ start_process (void *cp_)
 
   /* If load failed, quit. */
   palloc_free_page (file_name);
+<<<<<<< HEAD
   if (!success) 
     {
 
@@ -117,6 +121,15 @@ start_process (void *cp_)
       thread_exit (-1);
     } 
   
+=======
+  if (!success)
+  {  
+    cp->exit_status = -1;
+    sema_up(&(cp->parent->child_load)); 
+    thread_exit (-1);
+  }
+
+>>>>>>> 1ccbeccd1f6cf7772ec63873cd659650a3b23dab
   
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
