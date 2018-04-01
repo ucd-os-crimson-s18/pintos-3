@@ -366,6 +366,8 @@ other than end of file). Fd 0 reads from the keyboard using input_getc().
 int 
 syscall_read (int fd, void *buffer, unsigned size)
 {
+  /* check to see if valid file pointer */
+  check_ptr(buffer, size);
 
   struct file_desc *f_desc;
   int ret;
@@ -419,6 +421,8 @@ readers and our grading scripts.
 int 
 syscall_write (int fd, void *buffer, unsigned size)
 {
+  /* check to see if valid file pointer */
+  check_ptr(buffer, size);
 
   struct file_desc * f_desc;
   int ret = -1;
