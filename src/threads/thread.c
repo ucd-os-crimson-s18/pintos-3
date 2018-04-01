@@ -197,7 +197,7 @@ thread_create (const char *name, int priority,
   sf = alloc_frame (t, sizeof *sf);
   sf->eip = switch_entry;
   sf->ebp = 0;
-
+  
   /* Add to run queue. */
   thread_unblock (t);
 
@@ -466,6 +466,7 @@ init_thread (struct thread *t, const char *name, int priority)
 
   /*------------------------------------------------------------ADDED BY CRIMSON*/ 
   list_init (&t->children_list);
+  list_init (&t->files);
 
   old_level = intr_disable ();
   list_push_back (&all_list, &t->allelem);

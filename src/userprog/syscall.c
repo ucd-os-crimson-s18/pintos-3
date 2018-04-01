@@ -19,6 +19,8 @@ void
 syscall_init (void) 
 {
   intr_register_int (0x30, 3, INTR_ON, syscall_handler, "syscall");
+  list_init (&open_files);
+  lock_init (&filesys_lock);
 }
 
 static void
@@ -256,7 +258,7 @@ Implementing this system call requires considerably more work than any of the re
 int 
 syscall_wait (pid_t pid)
 {
-
+  return process_wait(pid);
 }
 
 /*
@@ -312,18 +314,29 @@ syscall_open (const char *file)
   /* check to see if valid file pointer */
   check_ptr(file, 4);
 
+  int ret = -1;
+  
+  lock_acquire(&filesys_lock);
   /* open the file */
   struct file *f = filesys_open(file);
+  struct file_desc *fd;
+  struct thread *cur = thread_current();
 
-  if(f == NULL)
+ 
+  if(f != NULL)
   {
-    return -1;
+    fd = malloc(sizeof(struct file_desc));
+    fd->fd = increment_fd();
+    fd->tid = thread_current()->tid;
+    fd->f = f;
+    list_push_back(&open_files, &(fd->fd_elem));
+    //list_push_back(&(cur->files), &(fd->thread_elem));
+
+    ret = fd->fd;
   }
 
-  /* Failing open twice */
-  /* Each file needs its own fd */
-  else 
-    return 2;
+  lock_release(&filesys_lock);
+  return ret;
 }
 
 /*
@@ -332,7 +345,16 @@ Returns the size, in bytes, of the file open as fd.
 int 
 syscall_filesize (int fd)
 {
-
+  struct file_desc * f_desc;
+  int ret = -1;
+  lock_acquire(&filesys_lock);
+  f_desc = find_open_file(fd);
+  if(f_desc != NULL)
+  {
+    ret = file_length(f_desc->f);
+  }
+  lock_release(&filesys_lock);
+  return ret;
 }
 
 /*
@@ -344,10 +366,40 @@ int
 syscall_read (int fd, void *buffer, unsigned size)
 {
 
-  // fd = 0 is stdin
+  struct file_desc *f_desc;
+  int ret;
 
+  lock_acquire(&filesys_lock);
 
-  
+  /* If trying to read stdout, terminate */
+  if(fd == 0)
+  {
+    ret = -1;
+  }
+  /* If trying to read stdin, terminate, may have to implement later */
+  else if (fd == 1)
+  {
+    ret = -1;
+  }  
+  else
+  {
+
+    /* Find file fd */
+    f_desc = find_open_file(fd);
+    if(f_desc == NULL)
+    {
+      ret = -1;
+    }
+    else
+    {
+      ret = file_read(f_desc->f,buffer,size);
+    }
+    
+  }
+
+  lock_release(&filesys_lock);
+  return ret;
+
 }
 
 /*
@@ -366,14 +418,32 @@ readers and our grading scripts.
 int 
 syscall_write (int fd, void *buffer, unsigned size)
 {
-  if(fd == 1)
+
+  struct file_desc * f_desc;
+  int ret = -1;
+
+  lock_acquire(&filesys_lock);
+
+  if(fd == 0){
+    ret = -1;
+  }
+  else if(fd == 1)
   {
     putbuf(buffer, size);
 
-    return size;
+    ret = size;
+  }
+  else
+  {
+    f_desc = find_open_file(fd);
+    if(f_desc != NULL)
+    {
+      ret = file_write(f_desc->f, buffer, size);
+    }
   }
 
-  return 0;
+  lock_release(&filesys_lock);
+  return ret;
 }
 
 /*
@@ -388,7 +458,14 @@ file system and do not require any special effort in system call implementation.
 void 
 syscall_seek (int fd, unsigned position)
 {
-
+  struct file_desc *f_desc;
+  lock_acquire(&filesys_lock);
+  f_desc = find_open_file(fd);
+  if(f_desc != NULL);
+  {
+    file_seek (f_desc->f, position);
+  }
+  lock_release(&filesys_lock);
 }
 
 /*
@@ -398,7 +475,15 @@ in bytes from the beginning of the file.
 unsigned 
 syscall_tell (int fd)
 {
-
+  struct file_desc *f_desc;
+  unsigned ret = 0;
+  lock_acquire(&filesys_lock);
+  f_desc = find_open_file(fd);
+  if(f_desc != NULL);
+  {
+    ret = file_tell(f_desc->f);
+  }
+  lock_release(&filesys_lock);
 }
 
 /*
@@ -408,12 +493,33 @@ file descriptors, as if by calling this function for each one.
 void 
 syscall_close (int fd)
 {
-  /* check to see if valid file pointer */
-  check_ptr(fd, 4);
+
+  struct thread *cur = thread_current();
+  struct list_elem *e;
+  struct file_desc *file_d = NULL;
+
+  lock_acquire(&filesys_lock);
 
   /* Find file pertaining to fd */
-  /* close the file */
+  for (e = list_begin (&open_files); e != list_end (&open_files); e = list_next (e))
+  {
+     file_d = list_entry (e, struct file_desc, fd_elem);
+     if (file_d->fd == fd && file_d->tid == cur->tid)
+        break;
+   }
 
+  /* If file doesn't exist, terminate */
+  if(file_d == NULL){
+    lock_release(&filesys_lock);
+    syscall_exit(-1);
+  }
+  
+  /* close the file */
+  file_close(file_d->f);
+  list_remove(&(file_d->fd_elem));
+  // list_remove(&(file_d->thread_elem));
+  lock_release(&filesys_lock);
+  free(file_d);
 }
 
 
@@ -460,4 +566,33 @@ put_user (uint8_t *udst, uint8_t byte)
   : "=&a" (error_code), "=m" (*udst) : "q" (byte));
   return error_code != -1;
 }
+
+
+
+/*Increases the fid by 1 each call, beginning at 2*/
+static int
+increment_fd (void)
+{
+  static int fid = 1;
+  return ++fid;
+}
+
+
+struct file_desc *find_open_file(int fd)
+{
+
+  struct file_desc *f_desc;
+  struct list_elem *e;
+
+  for (e = list_begin (&open_files); e != list_end (&open_files);
+       e = list_next (e))
+  {
+     f_desc  = list_entry (e, struct file_desc, fd_elem);
+     if (f_desc->fd == fd && f_desc->tid == thread_current()->tid)
+        return f_desc;
+   }
+
+  return NULL;
+}
+
   /*------------------------------------------------------------ADDED BY CRIMSON*/ 
