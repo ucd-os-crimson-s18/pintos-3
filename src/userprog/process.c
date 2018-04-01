@@ -69,7 +69,7 @@ process_execute (const char *file_name)
   }
   else
   {
-    sema_down(&(cur->child_load));
+    sema_down(&(cur->child_load));  
   }
 
   /*------------------------------------------------------------ADDED BY CRIMSON*/  

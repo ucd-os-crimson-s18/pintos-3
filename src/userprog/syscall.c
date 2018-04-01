@@ -268,7 +268,7 @@ int
 syscall_wait (pid_t pid)
 {
   /* If pid is larger than possible number of processes, terminate */
-  if(pid > 100)
+  if(pid > 10000)
   {
     syscall_exit(-1);
   }
