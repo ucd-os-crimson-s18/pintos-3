@@ -189,6 +189,8 @@ process_exit (int status)
   struct thread *cur = thread_current ();
   uint32_t *pd;
 
+  printf("%s: exit(%d)\n", thread_current()->name, status);
+
   cur->parent->cp_ptr->exit_status = status;
   sema_up(&(cur->parent->cp_ptr->child_dead));
   
