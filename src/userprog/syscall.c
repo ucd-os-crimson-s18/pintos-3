@@ -231,6 +231,7 @@ syscall_exec (const char *cmd_line)
   }
 
  return pid;
+ //return process_execute(cmd_line);
 }
 
 /*
@@ -391,12 +392,12 @@ syscall_read (int fd, void *buffer, unsigned size)
   /* If trying to read stdout, terminate */
   if(fd == 0)
   {
-    ret = -1;
+    ret = input_getc ();
   }
   /* If trying to read stdin, terminate, may have to implement later */
   else if (fd == 1)
   {
-    ret = -1;
+    syscall_exit(-1);
   }  
   else
   {
@@ -415,6 +416,7 @@ syscall_read (int fd, void *buffer, unsigned size)
   }
 
   lock_release(&filesys_lock);
+
   return ret;
 
 }
@@ -523,12 +525,16 @@ syscall_close (int fd)
   for (e = list_begin (&open_files); e != list_end (&open_files); e = list_next (e))
   {
      file_d = list_entry (e, struct file_desc, fd_elem);
-     if (file_d->fd == fd && file_d->tid == cur->tid)
+     if (file_d->fd == fd) //&& file_d->tid == cur->tid)
         break;
    }
 
   /* If file doesn't exist, terminate */
   if(file_d == NULL){
+    lock_release(&filesys_lock);
+    syscall_exit(-1);
+  }
+  if(file_d-> tid != cur->tid){
     lock_release(&filesys_lock);
     syscall_exit(-1);
   }

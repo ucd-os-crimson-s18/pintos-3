@@ -59,7 +59,6 @@ process_execute (const char *file_name)
   /* Extract the name of the executable */
   
   char *exe_name = strtok_r(fn_copy2, " ", &save_ptr); 
-
   
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (exe_name, PRI_DEFAULT, start_process, cp);
@@ -67,7 +66,6 @@ process_execute (const char *file_name)
   {
       palloc_free_page (fn_copy); 
       free(cp);
-      return -1;
   }
 
   sema_down(&(cur->child_load));
@@ -188,6 +186,8 @@ process_exit (int status)
 {
   struct thread *cur = thread_current ();
   uint32_t *pd;
+
+  file_close(cur->exe);
 
   printf("%s: exit(%d)\n", thread_current()->name, status);
 
@@ -417,7 +417,10 @@ load (const char *file_name, void (**eip) (void), void **esp)
 
  done:
   /* We arrive here whether the load is successful or not. */
-  file_close (file);
+  file_deny_write(file);
+  t->exe = file;
+
+ // file_close (file);
   return success;
 }
 
