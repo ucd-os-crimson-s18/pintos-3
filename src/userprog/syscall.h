@@ -23,6 +23,7 @@ static bool check_ptr(void *, uint8_t);
 static int get_user (const uint8_t *);
 static bool put_user (uint8_t *udst, uint8_t byte);
 static int increment_fd(void);
+struct file_desc *find_open_file(int);
 
 struct file_desc
     {

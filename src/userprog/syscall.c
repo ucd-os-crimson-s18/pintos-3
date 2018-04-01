@@ -345,7 +345,16 @@ Returns the size, in bytes, of the file open as fd.
 int 
 syscall_filesize (int fd)
 {
-
+  struct file_desc * f_desc;
+  int ret = -1;
+  lock_acquire(&filesys_lock);
+  f_desc = find_open_file(fd);
+  if(f_desc != NULL)
+  {
+    ret = file_length(f_desc->f);
+  }
+  lock_release(&filesys_lock);
+  return ret;
 }
 
 /*
@@ -357,10 +366,40 @@ int
 syscall_read (int fd, void *buffer, unsigned size)
 {
 
-  // fd = 0 is stdin
+  struct file_desc *f_desc;
+  int ret;
 
+  lock_acquire(&filesys_lock);
 
-  
+  /* If trying to read stdout, terminate */
+  if(fd == 0)
+  {
+    ret = -1;
+  }
+  /* If trying to read stdin, terminate, may have to implement later */
+  else if (fd == 1)
+  {
+    ret = -1;
+  }  
+  else
+  {
+
+    /* Find file fd */
+    f_desc = find_open_file(fd);
+    if(f_desc == NULL)
+    {
+      ret = -1;
+    }
+    else
+    {
+      ret = file_read(f_desc->f,buffer,size);
+    }
+    
+  }
+
+  lock_release(&filesys_lock);
+  return ret;
+
 }
 
 /*
@@ -506,5 +545,21 @@ increment_fd (void)
 }
 
 
+struct file_desc *find_open_file(int fd)
+{
+
+  struct file_desc *f_desc;
+  struct list_elem *e;
+
+  for (e = list_begin (&open_files); e != list_end (&open_files);
+       e = list_next (e))
+  {
+     f_desc  = list_entry (e, struct file_desc, fd_elem);
+     if (f_desc->fd == fd && f_desc->tid == thread_current()->tid)
+        return f_desc;
+   }
+
+  return NULL;
+}
 
   /*------------------------------------------------------------ADDED BY CRIMSON*/ 
