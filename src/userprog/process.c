@@ -173,7 +173,7 @@ process_wait (tid_t child_tid)
       sema_down(&(cp->child_dead));
     }
 
-    list_remove(&(cp->child_elem));
+    //list_remove(&(cp->child_elem));
     cp->status = ONE_ALIVE;
 
     return cp->exit_status;
