@@ -31,7 +31,7 @@ struct file_desc
         struct list_elem fd_elem;
     }
 
-  struct list open_files; // list corresponds to list_elem in file_desc
+struct list open_files; // list corresponds to list_elem in file_desc
 
 struct lock filesys_lock; // lock on whole file system
   
