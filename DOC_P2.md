@@ -30,11 +30,37 @@ Jeff McMillan Jeff.McMillan@ucdenver.edu
 >> 'struct' member, global or static variable, `typedef', or
 >> enumeration.  Identify the purpose of each in 25 words or less.
 
+char *token - Used for the strtok_r function to hold the string
+char_count - Holds the count of characters of the arguments
+int argc - Holds the count of arguments
+char * argv[128] - Used to store the argument address
+
 ## ALGORITHMS ----
 
 >> A2: Briefly describe how you implemented argument parsing.  How do
 >> you arrange for the elements of argv[] to be in the right order?
 >> How do you avoid overflowing the stack page?
+
+Inside the setup_stack, we set up our argument passing, when the page
+is successfully installed.
+
+In order to implement argument passing we needed to extract each argument 
+from the file and the store them into the stack.
+We used the already implemented strtok_r function inside string.c to extract
+the arguments, delimited by spaces. Which were then pushed into the stack by 
+subtracting, from the esp, the length of each argument. Since esp is set to 
+PHYS_BASE we needed to be subtracting to push below this value, into user
+memory space.
+
+Afterwards using the character count we kept track of, we aligned the esp 
+so it could be 4 bytes exactly and the pushed 4 bytes of null. We then used an
+array, which we pushed the esp addresses earlier, to reference the previosly 
+pushed arguments and store those onto esp but in reverse order so the last argument 
+would be on top and the executable name on the bottom.
+
+Finally, we push the address to argv, the argc, and a fake return address.
+We kept our argument limit to 128 to avoid overflowing the stack page.
+
 
 ## RATIONALE ----
 
