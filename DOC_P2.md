@@ -138,6 +138,8 @@ struct lock filesys_lock; /* lock for the file system */
 ###### Functions
 
 ``` C
+/* INSIDE SYSCALL.H */  
+
 void syscall_halt (void);
 void syscall_exit (int);
 pid_t syscall_exec (const char *);
@@ -159,15 +161,29 @@ static int increment_fd(void);
 struct file_desc *find_open_file(int);
 ```
 
-
 >> B2: Describe how file descriptors are associated with open files.
 >> Are file descriptors unique within the entire OS or just within a
 >> single process?
+
+File descriptors numbered 0 and 1 are reserved for the console: fd 0 (STDIN_FILENO) is
+standard input, fd 1 (STDOUT_FILENO) is standard output. Each process has an independent 
+set of file descriptors. When a single file is opened more than once, whether by a single 
+process or different processes, each open returns a new file descriptor. Different file 
+descriptors for a single file are closed independently in separate calls to close and 
+they do not share a file position.
 
 ## ALGORITHMS 
 
 >> B3: Describe your code for reading and writing user data from the
 >> kernel.
+
+We setup a function ```static bool check_ptr(void *, uint8_t);``` which
+returns a boolean value, true if pointer is valid or false if the pointer
+is invalid. We pass a ```void *``` for the address and ```uint8_t``` for the
+size. Inside the function we have a for loop to iterate through the address 
+for the size passed in. We check each address if it is in user memory using
+the ```is_user_vaddr``` function inside vaddr.h and checking if the address is 
+mapped using the ```pagedir_get_page``` inside pagedir.h. 
 
 >> B4: Suppose a system call causes a full page (4,096 bytes) of data
 >> to be copied from user space into the kernel.  What is the least
@@ -175,6 +191,8 @@ struct file_desc *find_open_file(int);
 >> (e.g. calls to pagedir_get_page()) that might result?  What about
 >> for a system call that only copies 2 bytes of data?  Is there room
 >> for improvement in these numbers, and how much?
+
+
 
 >> B5: Briefly describe your implementation of the "wait" system call
 >> and how it interacts with process termination.
