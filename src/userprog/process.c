@@ -67,8 +67,10 @@ process_execute (const char *file_name)
       palloc_free_page (fn_copy); 
       free(cp);
   }
-
-  sema_down(&(cur->child_load));
+  else
+  {
+    sema_down(&(cur->child_load));  
+  }
 
   /*------------------------------------------------------------ADDED BY CRIMSON*/  
   return tid;
