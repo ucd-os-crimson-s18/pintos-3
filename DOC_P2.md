@@ -14,19 +14,14 @@ Jeff McMillan Jeff.McMillan@ucdenver.edu
 
 # PRELIMINARIES 
 
->> If you have any preliminary comments on your submission, notes for the
->> TAs, or extra credit, please give them here.
-
->> Please cite any offline or online sources you consulted while
->> preparing your submission, other than the Pintos documentation, course
->> text, lecture notes, and course staff.
+None
 
 
 # ARGUMENT PASSING
 
 ## DATA STRUCTURES ----
 
-###### A1: Copy here the declaration of each new or changed `struct' or 'struct' member, global or static variable, `typedef', or enumeration.  Identify the purpose of each in 25 words or less.
+###### A1: Copy here the declaration of each new or changed `struct` or `struct` member, global or static variable, `typedef`, or enumeration.  Identify the purpose of each in 25 words or less.
 
 ```char *token``` - Used for the strtok_r function to hold the string
 
@@ -41,9 +36,7 @@ Jeff McMillan Jeff.McMillan@ucdenver.edu
 
 ## ALGORITHMS ----
 
->> A2: Briefly describe how you implemented argument parsing.  How do
->> you arrange for the elements of argv[] to be in the right order?
->> How do you avoid overflowing the stack page?
+###### A2: Briefly describe how you implemented argument parsing.  How do you arrange for the elements of `argv[]` to be in the right order? How do you avoid overflowing the stack page?
 
 Inside the setup_stack, we set up our argument passing, when the page
 is successfully installed.
@@ -68,27 +61,19 @@ We kept our argument limit to 128 to avoid overflowing the stack page.
 
 ## RATIONALE ----
 
->> A3: Why does Pintos implement strtok_r() but not strtok()?
+###### A3: Why does Pintos implement `strtok_r()` but not `strtok()`?
 
-With strtok_r() you can call this from multiple threads simultaneously or in nested loops 
-because they take the extra argument to store the state betwen calls, while strtok() would use
+With `strtok_r()` you can call this from multiple threads simultaneously or in nested loops 
+because they take the extra argument to store the state betwen calls, while `strtok()` would use
 a global variable which might give undefined behaviour.
 
->> A4: In Pintos, the kernel separates commands into a executable name
->> and arguments.  In Unix-like systems, the shell does this
->> separation.  Identify at least two advantages of the Unix approach.
-
-
-
-
+###### A4: In Pintos, the kernel separates commands into a executable name and arguments.  In Unix-like systems, the shell does this separation. Identify at least two advantages of the Unix approach.
 
 # SYSTEM CALLS
 
 ## DATA STRUCTURES
 
->> B1: Copy here the declaration of each new or changed `struct' or
->> `struct' member, global or static variable, `typedef', or
->> enumeration.  Identify the purpose of each in 25 words or less.
+###### B1: Copy here the declaration of each new or changed `struct` or `struct` member, global or static variable, `typedef`, or enumeration. Identify the purpose of each in 25 words or less.
 
 ###### Structs
 ```C
@@ -159,9 +144,7 @@ static int increment_fd(void);
 struct file_desc *find_open_file(int);
 ```
 
->> B2: Describe how file descriptors are associated with open files.
->> Are file descriptors unique within the entire OS or just within a
->> single process?
+###### B2: Describe how file descriptors are associated with open files. Are file descriptors unique within the entire OS or just within a single process?
 
 File descriptors numbered 0 and 1 are reserved for the console: fd 0 (STDIN_FILENO) is
 standard input, fd 1 (STDOUT_FILENO) is standard output. Each process has an independent 
@@ -172,8 +155,7 @@ they do not share a file position.
 
 ## ALGORITHMS 
 
->> B3: Describe your code for reading and writing user data from the
->> kernel.
+###### B3: Describe your code for reading and writing user data from the kernel.
 
 We setup a function ```static bool check_ptr(void *, uint8_t);``` which
 returns a boolean value, true if pointer is valid or false if the pointer
@@ -183,56 +165,31 @@ for the size passed in. We check each address if it is in user memory using
 the ```is_user_vaddr``` function inside vaddr.h and checking if the address is 
 mapped using the ```pagedir_get_page``` inside pagedir.h. 
 
->> B4: Suppose a system call causes a full page (4,096 bytes) of data
->> to be copied from user space into the kernel.  What is the least
->> and the greatest possible number of inspections of the page table
->> (e.g. calls to pagedir_get_page()) that might result?  What about
->> for a system call that only copies 2 bytes of data?  Is there room
->> for improvement in these numbers, and how much?
+###### B4: Suppose a system call causes a full page (4,096 bytes) of data to be copied from user space into the kernel.  What is the least and the greatest possible number of inspections of the page table (e.g. calls to pagedir_get_page()) that might result?  What about for a system call that only copies 2 bytes of data?  Is there room for improvement in these numbers, and how much?
+
+We can have at least 1024 inspections and at most 4096 inspections for the 4096 bytes and for 2 bytes at least 0 at most 1. There can be improvement using the get_user and put_user functions provided in the Pintos PDF.
+
+###### B5: Briefly describe your implementation of the "wait" system call and how it interacts with process termination.
 
 
 
->> B5: Briefly describe your implementation of the "wait" system call
->> and how it interacts with process termination.
-
->> B6: Any access to user program memory at a user-specified address
->> can fail due to a bad pointer value.  Such accesses must cause the
->> process to be terminated.  System calls are fraught with such
->> accesses, e.g. a "write" system call requires reading the system
->> call number from the user stack, then each of the call's three
->> arguments, then an arbitrary amount of user memory, and any of
->> these can fail at any point.  This poses a design and
->> error-handling problem: how do you best avoid obscuring the primary
->> function of code in a morass of error-handling?  Furthermore, when
->> an error is detected, how do you ensure that all temporarily
->> allocated resources (locks, buffers, etc.) are freed?  In a few
->> paragraphs, describe the strategy or strategies you adopted for
->> managing these issues.  Give an example.
+###### B6: Any access to user program memory at a user-specified address can fail due to a bad pointer value.  Such accesses must cause the process to be terminated.  System calls are fraught with such accesses, e.g. a "write" system call requires reading the system call number from the user stack, then each of the call's three arguments, then an arbitrary amount of user memory, and any of these can fail at any point.  This poses a design and error-handling problem: how do you best avoid obscuring the primary function of code in a morass of error-handling?  Furthermore, when an error is detected, how do you ensure that all temporarily allocated resources (locks, buffers, etc.) are freed?  In a few paragraphs, describe the strategy or strategies you adopted for managing these issues.  Give an example.
 
 ## SYNCHRONIZATION 
 
->> B7: The "exec" system call returns -1 if loading the new executable
->> fails, so it cannot return before the new executable has completed
->> loading.  How does your code ensure this?  How is the load
->> success/failure status passed back to the thread that calls "exec"?
+###### B7: The "exec" system call returns -1 if loading the new executable fails, so it cannot return before the new executable has completed loading.  How does your code ensure this?  How is the load success/failure status passed back to the thread that calls "exec"?
 
->> B8: Consider parent process P with child process C.  How do you
->> ensure proper synchronization and avoid race conditions when P
->> calls wait(C) before C exits?  After C exits?  How do you ensure
->> that all resources are freed in each case?  How about when P
->> terminates without waiting, before C exits?  After C exits?  Are
->> there any special cases?
+###### B8: Consider parent process P with child process C.  How do you ensure proper synchronization and avoid race conditions when P calls wait(C) before C exits?  After C exits?  How do you ensure that all resources are freed in each case?  How about when P terminates without waiting, before C exits?  After C exits?  Are there any special cases?
 
 ## RATIONALE 
 
->> B9: Why did you choose to implement access to user memory from the
->> kernel in the way that you did?
+###### B9: Why did you choose to implement access to user memory from the kernel in the way that you did?
 
->> B10: What advantages or disadvantages can you see to your design
->> for file descriptors?
+We chose to implement accessing user memory using method 1 from the pdf because we found this more intuitive and simpler than method 2, originally we tried to implement method 2 but it didnt seem to work and we were struggling with it so we then decided to change it to a simpler function call and check if it was user memory and if it was mapped which made things work.
 
->> B11: The default tid_t to pid_t mapping is the identity mapping.
->> If you changed it, what advantages are there to your approach?
+###### B10: What advantages or disadvantages can you see to your design for file descriptors?
+
+###### B11: The default tid_t to pid_t mapping is the identity mapping. If you changed it, what advantages are there to your approach?
 
 
 
