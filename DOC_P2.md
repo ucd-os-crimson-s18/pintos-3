@@ -167,17 +167,28 @@ mapped using the ```pagedir_get_page``` inside pagedir.h.
 
 ###### B4: Suppose a system call causes a full page (4,096 bytes) of data to be copied from user space into the kernel.  What is the least and the greatest possible number of inspections of the page table (e.g. calls to pagedir_get_page()) that might result?  What about for a system call that only copies 2 bytes of data?  Is there room for improvement in these numbers, and how much?
 
-We can have at least 1024 inspections and at most 4096 inspections for the 4096 bytes and for 2 bytes at least 0 at most 1. There can be improvement using the get_user and put_user functions provided in the Pintos PDF.
+We can have at least 1024 inspections and at most 4096 inspections for the 4096 bytes and 
+for 2 bytes at least 0 at most 1. There can be improvement using the get_user and put_user 
+functions provided in the Pintos PDF.
 
 ###### B5: Briefly describe your implementation of the "wait" system call and how it interacts with process termination.
-
-
+Inside our ```process_wait(tid child_tid)``` we iterate through our children_list belonging 
+to a thread in order to find the corresponding child thread given as an argument. We then down
+the semaphore belonging to the child process and proceed to remove the child from the thread's
+children list and set the children's status.
+This interacts with process teermination because this semaphore is upped inside ```process_exit()```
+so the child can wait until the process is terminated. And inside our ```syscall_wait``` we do something similar
+and get the child from the thread and remove it from the list and set the children status.
 
 ###### B6: Any access to user program memory at a user-specified address can fail due to a bad pointer value.  Such accesses must cause the process to be terminated.  System calls are fraught with such accesses, e.g. a "write" system call requires reading the system call number from the user stack, then each of the call's three arguments, then an arbitrary amount of user memory, and any of these can fail at any point.  This poses a design and error-handling problem: how do you best avoid obscuring the primary function of code in a morass of error-handling?  Furthermore, when an error is detected, how do you ensure that all temporarily allocated resources (locks, buffers, etc.) are freed?  In a few paragraphs, describe the strategy or strategies you adopted for managing these issues.  Give an example.
+
+Our implementation used the ```check_ptr()``` function discussed above in order to avoid obscuring the primary function of code and using a switch statement we called the ```check_ptr()``` function before accessing the memory and inside each syscall function we also used this function to make sure the memory was valid. This made sure our syscall implementations were cleaner. It was in our ```process_exit()``` a lot of the clean up took place and also assuring anywhere we allocated memory we had a free statement.
 
 ## SYNCHRONIZATION 
 
 ###### B7: The "exec" system call returns -1 if loading the new executable fails, so it cannot return before the new executable has completed loading.  How does your code ensure this?  How is the load success/failure status passed back to the thread that calls "exec"?
+
+Our code ensures by having a semaphore that allows for synchronization based on load's success. This semaphore is downed inside ```process_execute()``` and upped inside ```proccess_load()```, we then use a boolean variable to pass into ```process_execute``` if the load was successful or not.
 
 ###### B8: Consider parent process P with child process C.  How do you ensure proper synchronization and avoid race conditions when P calls wait(C) before C exits?  After C exits?  How do you ensure that all resources are freed in each case?  How about when P terminates without waiting, before C exits?  After C exits?  Are there any special cases?
 
@@ -188,9 +199,10 @@ We can have at least 1024 inspections and at most 4096 inspections for the 4096 
 We chose to implement accessing user memory using method 1 from the pdf because we found this more intuitive and simpler than method 2, originally we tried to implement method 2 but it didnt seem to work and we were struggling with it so we then decided to change it to a simpler function call and check if it was user memory and if it was mapped which made things work.
 
 ###### B10: What advantages or disadvantages can you see to your design for file descriptors?
+Our design for file descriptors uses a struct to hold the neccesary variable to handle the file system calls. We have two lists being used outside of our struct with list elements inside the struct. We can the get the file descriptors and corresponding threads from these list elements. The advanatage is that is a simple design and easy to understand, but at a disadvanatage because it may be slow or could be cleaned up by using hash tables and provide faster access.
 
 ###### B11: The default tid_t to pid_t mapping is the identity mapping. If you changed it, what advantages are there to your approach?
-
+We did not change this.
 
 
 
