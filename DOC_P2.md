@@ -30,17 +30,16 @@ Jeff McMillan Jeff.McMillan@ucdenver.edu
 >> 'struct' member, global or static variable, `typedef', or
 >> enumeration.  Identify the purpose of each in 25 words or less.
 
-```C
-char *token``` - Used for the strtok_r function to hold the string
+```char *token``` - Used for the strtok_r function to hold the string
 
-```C
-char_count``` - Holds the count of characters of the arguments
 
-```C
-int argc``` - Holds the count of arguments
+```char_count``` - Holds the count of characters of the arguments
 
-```C
-char * argv[128] - Used to store the argument address
+
+```int argc``` - Holds the count of arguments
+
+
+```char * argv[128]``` - Used to store the argument address
 
 ## ALGORITHMS ----
 
@@ -93,19 +92,73 @@ a global variable which might give undefined behaviour.
 >> `struct' member, global or static variable, `typedef', or
 >> enumeration.  Identify the purpose of each in 25 words or less.
 
+###### Structs
 ```C
+/* INSIDE PROCCESS.H */
 struct child_process
     {
       pid_t pid;                          /* pid of child */
       enum process_status status;         /* Process state */
       int exit_status;                    /* Exit code passed from exit()*/
       char *args;                         /* Args passed to thread_create*/
-      struct lock rw_lock;                /* Protect read/write */
       struct semaphore child_dead;        /* Synch dying of child (wait) */
       struct list_elem child_elem;        /* Parent uses to add to its child list */
       struct thread *parent;              /* Parent of new child */
      };
+     
+/* INSIDE THREAD.H & THREAD STRUCT */    
+    struct thread * parent;          /* Child's parent thread */       
+    struct list children_list;       /* List to hold the children */
+    struct child_process * cp_ptr;   /* Pointer to child process struct */
+    struct semaphore child_load;     /* Synch loading of child */
+    struct list files;               /* List to hold files */
+    struct file *exe;                /* Pointer to executable file */
+
+/* INSIDE SYSCALL.H */    
+    struct thread * parent;          /* Child's parent thread */       
+    struct list children_list;       /* List to hold the children */
+    struct child_process * cp_ptr;   /* Pointer to child process struct */
+    struct semaphore child_load;     /* Synch loading of child */
+    struct list files;               /* List to hold files */
+    struct file *exe;                /* Pointer to executable file */
+    
+    struct file_desc
+    {
+        int fd;                       /* Int to hold the file descriptor */
+        tid_t tid;                    /* thread id to get thread */
+        struct file * f;              /* Pointer to a file struct */
+        struct list_elem fd_elem;     /* file descriptor list element */
+        struct list_elem thread_elem; /* thread list element */
+    };
+
+struct list open_files;   /* list of open files */
+struct lock filesys_lock; /* lock for the file system */
 ```
+
+###### Functions
+
+``` C
+void syscall_halt (void);
+void syscall_exit (int);
+pid_t syscall_exec (const char *);
+int syscall_wait (pid_t);
+bool syscall_create (const char *, unsigned);
+bool syscall_remove (const char *);
+int syscall_open (const char *);
+int syscall_filesize (int);
+int syscall_read (int, void *, unsigned);
+int syscall_write (int, void *, unsigned);
+void syscall_seek (int, unsigned);
+unsigned syscall_tell (int);
+void syscall_close (int);
+
+static bool check_ptr(void *, uint8_t);
+static int get_user (const uint8_t *);
+static bool put_user (uint8_t *udst, uint8_t byte);
+static int increment_fd(void);
+struct file_desc *find_open_file(int);
+```
+
 
 >> B2: Describe how file descriptors are associated with open files.
 >> Are file descriptors unique within the entire OS or just within a
