@@ -26,9 +26,7 @@ Jeff McMillan Jeff.McMillan@ucdenver.edu
 
 ## DATA STRUCTURES ----
 
->> A1: Copy here the declaration of each new or changed `struct' or
->> 'struct' member, global or static variable, `typedef', or
->> enumeration.  Identify the purpose of each in 25 words or less.
+######A1: Copy here the declaration of each new or changed `struct' or 'struct' member, global or static variable, `typedef', or enumeration.  Identify the purpose of each in 25 words or less.
 
 ```char *token``` - Used for the strtok_r function to hold the string
 
