@@ -28,13 +28,6 @@
 #define MAX_STACK_SIZE (1 << 23)
 #define STACK_INDICATOR 0xbfff7f80
 
-// page types
-#define PAGE_CODE 1
-#define PAGE_IN_SWAP 2
-#define PAGE_MMAP 3
-#define PAGE_STACK 4
-#define PAGE_FILE 5
-
 struct page 
   {
     /* Immutable members. */
@@ -60,20 +53,5 @@ struct page
     off_t file_bytes;           /* Bytes to read/write, 1...PGSIZE. */
   };
 
-
-/*
-void s_page_table_clear(struct thread*t);
-
-
-struct s_page_table_entry * get_s_pt_entry(void * );
-bool load_page_in_s_page_table(struct s_page_table_entry * );
-bool load_page_from_swap (struct s_page_table_entry * );
-struct s_page_table_entry * frame_table_entry_to_s_pt_entry(struct frame_table_entry * ); 
-
-void s_page_table_entry_clear_by_file(struct file * );
-bool grow_stack_one_page(void *);
-
-void validate_sys_read_buffer(void *, unsigned );
-*/
 
 #endif /* vm/page.h */
